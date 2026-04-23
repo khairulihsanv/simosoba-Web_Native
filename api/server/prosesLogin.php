@@ -3,6 +3,7 @@
 // server/prosesLogin.php — Proses Form Login
 // Dipanggil dari form action="server/prosesLogin.php"
 // ============================================================
+require_once __DIR__ . '/session_handler.php';
 session_start();
 include 'koneksi.php';
 

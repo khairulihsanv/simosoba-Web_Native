@@ -3,6 +3,7 @@
 // login.php — Halaman Login & Register
 // session_start() WAJIB di baris paling atas sebelum HTML
 // ============================================================
+require_once 'server/session_handler.php';
 session_start();
 include 'server/koneksi.php';
 

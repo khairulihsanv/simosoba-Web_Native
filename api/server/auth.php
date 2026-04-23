@@ -3,7 +3,11 @@
 // server/auth.php — Sistem Autentikasi & Role
 // Include file ini di setiap halaman yang butuh proteksi
 // ============================================================
-if (session_status() === PHP_SESSION_NONE) session_start();
+// Session handler berbasis DB wajib untuk Vercel serverless
+if (session_status() === PHP_SESSION_NONE) {
+    require_once __DIR__ . '/session_handler.php';
+    session_start();
+}
 
 // ── Fungsi: Cek login ─────────────────────────────────────
 // Panggil di awal halaman: requireLogin();
