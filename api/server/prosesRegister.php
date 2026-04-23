@@ -1,0 +1,60 @@
+<?php
+// ============================================================
+// server/prosesRegister.php — Proses Form Registrasi
+// Role baru dari register selalu 'user' (hak akses terbatas)
+// Super Admin bisa upgrade role via halaman users.php
+// ============================================================
+session_start();
+include 'koneksi.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: ../login.php'); exit();
+}
+
+$nama     = trim($_POST['nama']      ?? '');
+$username = trim($_POST['username']  ?? '');
+$password = trim($_POST['password']  ?? '');
+$konfirm  = trim($_POST['konfirmasi']?? '');
+$divisi   = trim($_POST['divisi']    ?? '');
+
+// Validasi semua field diisi
+if (!$nama || !$username || !$password || !$konfirm) {
+    header('Location: ../login.php?tab=register&error=empty'); exit();
+}
+
+// Validasi password minimal 6 karakter
+if (strlen($password) < 6) {
+    header('Location: ../login.php?tab=register&error=short'); exit();
+}
+
+// Validasi konfirmasi password cocok
+if ($password !== $konfirm) {
+    header('Location: ../login.php?tab=register&error=mismatch'); exit();
+}
+
+// Cek apakah username sudah dipakai
+$cek = mysqli_prepare($koneksi, "SELECT id FROM users WHERE username = ? LIMIT 1");
+mysqli_stmt_bind_param($cek, 's', $username);
+mysqli_stmt_execute($cek);
+mysqli_stmt_store_result($cek);
+if (mysqli_stmt_num_rows($cek) > 0) {
+    header('Location: ../login.php?tab=register&error=duplicate'); exit();
+}
+
+// Hash password sebelum disimpan — JANGAN simpan plain text
+$hash = password_hash($password, PASSWORD_DEFAULT);
+
+// Role default untuk registrasi mandiri adalah 'user'
+// Untuk ganti default role, ubah 'user' di bawah ini
+$role = 'user';
+
+$stmt = mysqli_prepare($koneksi,
+    "INSERT INTO users (nama, username, password, role, divisi) VALUES (?, ?, ?, ?, ?)"
+);
+mysqli_stmt_bind_param($stmt, 'sssss', $nama, $username, $hash, $role, $divisi);
+
+if (mysqli_stmt_execute($stmt)) {
+    header('Location: ../login.php?tab=login&success=registered'); exit();
+} else {
+    header('Location: ../login.php?tab=register&error=db'); exit();
+}

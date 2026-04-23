@@ -1,0 +1,505 @@
+/* ============================================================
+   assets/css/main.css — SiMoSoBa v2
+   Tema: Y2K + Health (hijau mint, putih bersih, aksen neon)
+   ============================================================
+
+   🎨 PANDUAN KUSTOMISASI CEPAT:
+   Semua warna utama ada di :root di bawah.
+   Untuk ganti tema, cukup ubah nilai CSS variable di :root.
+
+   Bagian utama file ini:
+   1. :root       → variabel warna & ukuran (UBAH DI SINI untuk ganti tema)
+   2. Base        → reset & font dasar
+   3. Layout      → main-content & padding bawah untuk floating nav
+   4. Topbar      → header atas halaman
+   5. Cards       → stat card, content card
+   6. Table       → tabel data
+   7. Badge       → label status
+   8. Form        → input, select, button
+   9. Bottom Nav  → navigasi mengambang di bawah
+   10. Alert      → notifikasi sukses/error
+   11. Notif Popup → popup kadaluarsa
+   12. Responsive  → penyesuaian layar kecil
+   ============================================================ */
+
+/* ── 1. CSS Variables (PUSAT KUSTOMISASI WARNA) ────────────
+   Ubah nilai di sini untuk mengubah seluruh tampilan sekaligus */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@500;700&display=swap');
+
+:root {
+  /* ── Warna Utama Brand ─────────────────────────────────
+     Ganti --primary untuk ubah warna tombol, aktif nav, dll */
+  --primary:        #00c896;   /* hijau mint Y2K */
+  --primary-dark:   #00a67e;   /* hijau lebih gelap (hover) */
+  --primary-light:  #e0faf3;   /* hijau sangat muda (background aksen) */
+  --primary-glow:   rgba(0,200,150,.18); /* efek glow/shadow hijau */
+
+  /* ── Warna Aksen (Y2K pop) ─────────────────────────────
+     Dipakai untuk highlight, badge, dsb */
+  --accent-lime:    #a8ff3e;   /* kuning-hijau neon */
+  --accent-sky:     #7dd3fc;   /* biru muda */
+  --accent-rose:    #fb7185;   /* merah muda */
+
+  /* ── Warna Background ──────────────────────────────────
+     --bg-page: latar seluruh halaman (di luar card) */
+  --bg-page:        #f0fdf8;   /* mint sangat muda */
+  --bg-card:        #ffffff;
+  --bg-card2:       #f8fffe;   /* card alternatif */
+  --bg-nav:         rgba(255,255,255,0.88); /* floating nav */
+
+  /* ── Warna Teks ────────────────────────────────────────*/
+  --text-main:      #0d2b22;   /* hijau sangat gelap (hampir hitam) */
+  --text-sub:       #3d7a68;   /* teks sekunder (hijau sedang) */
+  --text-muted:     #8bb5ab;   /* placeholder, keterangan kecil */
+
+  /* ── Status ────────────────────────────────────────────*/
+  --ok:             #00c896;
+  --warn:           #f59e0b;
+  --danger:         #ef4444;
+  --info:           #3b82f6;
+
+  /* ── Border & Shadow ───────────────────────────────────*/
+  --border:         #d1f0e8;
+  --border-dark:    #a8ddd0;
+  --shadow-sm:      0 2px 8px rgba(0,150,100,.07);
+  --shadow-md:      0 6px 24px rgba(0,150,100,.12);
+  --shadow-card:    0 1px 3px rgba(0,0,0,.04), 0 4px 16px rgba(0,150,100,.06);
+
+  /* ── Floating Nav ──────────────────────────────────────*/
+  --nav-h:          72px;      /* tinggi floating nav */
+
+  /* ── Animasi ───────────────────────────────────────────*/
+  --ease:           cubic-bezier(.4,0,.2,1);
+  --ease-bounce:    cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ── 2. Base Reset & Font ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-main);
+  background: var(--bg-page);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* Padding bawah agar konten tidak tertutup floating nav */
+  padding-bottom: calc(var(--nav-h) + 1.5rem);
+}
+
+/* ── 3. Layout ─────────────────────────────────────────── */
+/* Wrapper konten utama — tidak ada sidebar, full width */
+#main-content { width: 100%; }
+
+/* Padding konten dalam halaman */
+.page-body { padding: 1rem 1.25rem 0; }
+
+/* ── 4. Topbar ─────────────────────────────────────────── */
+/* Header atas setiap halaman.
+   Untuk ubah tinggi topbar → ubah padding di .topbar */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(240,253,248,.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: .875rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.topbar-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--primary-dark);
+  letter-spacing: -.3px;
+  white-space: nowrap;
+}
+.topbar-title {
+  font-size: .95rem; font-weight: 700; color: var(--text-main);
+}
+.topbar-sub {
+  font-size: .72rem; color: var(--text-sub); margin-top: 1px;
+}
+
+/* Pill jam di topbar kanan */
+.clock-pill {
+  font-family: 'Space Grotesk', monospace;
+  font-size: .82rem; font-weight: 700;
+  background: var(--primary-light);
+  border: 1px solid var(--border-dark);
+  color: var(--primary-dark);
+  padding: .3rem .875rem;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+/* Avatar + menu titik 3 di topbar kanan */
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 800; color: #fff;
+  cursor: pointer; flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--primary-glow);
+  position: relative;
+}
+
+/* Dropdown menu dari titik 3 / avatar */
+.topbar-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  min-width: 180px;
+  padding: .5rem;
+  display: none; /* toggle via JS: topbar-menu.style.display */
+  z-index: 200;
+}
+.topbar-menu.open { display: block; }
+.menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: .55rem .875rem;
+  border-radius: 8px;
+  font-size: .83rem; font-weight: 500;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: background .15s;
+  cursor: pointer;
+}
+.menu-item:hover { background: var(--primary-light); }
+.menu-item.danger { color: var(--danger); }
+.menu-item.danger:hover { background: #fee2e2; }
+.menu-sep { border: none; border-top: 1px solid var(--border); margin: .375rem 0; }
+
+/* ── 5. Cards ──────────────────────────────────────────── */
+/* Kartu konten — tambah class ini ke <div> untuk tampilan card */
+.content-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+/* Judul kartu */
+.card-title {
+  font-size: .9rem; font-weight: 700;
+  color: var(--text-main);
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: .875rem;
+}
+
+/* Stat card: kartu angka besar di dashboard */
+.stat-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow-card);
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease);
+  position: relative; overflow: hidden;
+}
+.stat-card::before {
+  /* Dekorasi garis diagonal Y2K di pojok kiri atas card */
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: var(--primary);
+  border-radius: 16px 0 0 16px;
+}
+/* Untuk ganti warna strip kiri stat card: ubah --strip-color di inline style */
+.stat-card[data-color="warn"]::before   { background: var(--warn); }
+.stat-card[data-color="danger"]::before { background: var(--danger); }
+.stat-card[data-color="info"]::before   { background: var(--info); }
+.stat-card[data-color="gray"]::before   { background: #94a3b8; }
+
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-icon { font-size: 1.4rem; margin-bottom: .4rem; }
+.stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.9rem; font-weight: 700; line-height: 1;
+  color: var(--text-main);
+}
+.stat-label {
+  font-size: .7rem; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .6px;
+  margin-top: .3rem;
+}
+
+/* ── 6. Table ──────────────────────────────────────────── */
+.table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.table thead th {
+  background: var(--primary-light);
+  padding: .6rem 1rem;
+  text-align: left;
+  font-size: .68rem; font-weight: 700;
+  color: var(--primary-dark);
+  letter-spacing: .5px; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: .75rem 1rem;
+  border-bottom: 1px solid #f0fdf8;
+  vertical-align: middle;
+}
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background: var(--primary-light); transition: background .12s; }
+
+/* Progress bar stok */
+.prog-bg {
+  background: var(--border);
+  border-radius: 99px; height: 6px; overflow: hidden; min-width: 80px;
+}
+.prog-fill { height: 100%; border-radius: 99px; transition: width .4s var(--ease); }
+
+/* Mono font untuk angka */
+.mono { font-family: 'Space Grotesk', monospace; font-weight: 500; }
+
+/* ── 7. Badge Status ────────────────────────────────────── */
+/* Gunakan: <span class="badge badge-ok">Aman</span> */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: .68rem; font-weight: 700; letter-spacing: .3px; white-space: nowrap;
+}
+.badge-ok     { background: #d1fae5; color: #065f46; }
+.badge-warn   { background: #fef3c7; color: #92400e; }
+.badge-danger { background: #fee2e2; color: #991b1b; }
+.badge-info   { background: #dbeafe; color: #1e40af; }
+.badge-gray   { background: #f1f5f9; color: #475569; }
+.badge-lime   { background: #ecfccb; color: #3f6212; }
+
+/* ── 8. Form Elements ───────────────────────────────────── */
+.form-label {
+  display: block; font-size: .76rem; font-weight: 700;
+  color: var(--text-sub); margin-bottom: 5px; letter-spacing: .2px;
+}
+.req { color: var(--danger); }
+
+/* Input / select / textarea */
+/* Untuk ubah ukuran input → ubah padding di .form-ctrl */
+.form-ctrl {
+  width: 100%;
+  padding: .625rem .875rem;
+  border: 1.5px solid var(--border-dark);
+  border-radius: 10px;
+  font-family: inherit; font-size: .875rem;
+  color: var(--text-main); background: #fff;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.form-ctrl:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.form-ctrl::placeholder { color: var(--text-muted); }
+
+/* Tombol utama hijau */
+/* Untuk ganti warna tombol → ubah background: var(--primary) */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: .625rem 1.25rem;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 10px;
+  font-family: inherit; font-size: .85rem; font-weight: 700;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: background .2s, transform .1s, box-shadow .2s;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+.btn-primary:hover  { background: var(--primary-dark); box-shadow: 0 4px 16px var(--primary-glow); }
+.btn-primary:active { transform: scale(.97); }
+.btn-full { width: 100%; }
+
+/* Tombol danger */
+.btn-danger {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: .375rem .75rem;
+  background: #fee2e2; color: var(--danger);
+  border: 1px solid #fca5a5; border-radius: 8px;
+  font-family: inherit; font-size: .77rem; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  transition: background .15s;
+}
+.btn-danger:hover { background: #fecaca; }
+
+/* Tombol outline */
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: .55rem 1rem;
+  background: transparent; color: var(--text-main);
+  border: 1.5px solid var(--border-dark); border-radius: 10px;
+  font-family: inherit; font-size: .85rem; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  transition: border-color .2s, color .2s;
+}
+.btn-outline:hover { border-color: var(--primary); color: var(--primary-dark); }
+
+/* ── 9. Floating Bottom Navigation ─────────────────────────
+   Navigasi modern mengambang di bawah layar.
+   Untuk tambah menu: tambah <a class="nav-item"> di includes/bottom_nav.php
+   Untuk ganti tinggi nav: ubah --nav-h di :root
+   Untuk ganti blur/warna: ubah backdrop-filter & background di .bottom-nav */
+.bottom-nav {
+  position: fixed; bottom: 1rem;
+  left: 50%; transform: translateX(-50%);
+  /* Lebar nav: max 480px agar tidak terlalu lebar di desktop */
+  width: min(calc(100% - 2rem), 480px);
+  height: var(--nav-h);
+  background: var(--bg-nav);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.8);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1), 0 2px 8px rgba(0,150,100,.1);
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 .75rem;
+  z-index: 100;
+  /* Animasi masuk dari bawah */
+  animation: navIn .4s var(--ease-bounce);
+}
+@keyframes navIn {
+  from { opacity:0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity:1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Item navigasi individual */
+.nav-item {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  padding: .5rem .875rem;
+  border-radius: 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: .65rem; font-weight: 600;
+  letter-spacing: .3px;
+  transition: all .2s var(--ease);
+  position: relative;
+  min-width: 56px;
+  white-space: nowrap;
+}
+.nav-item .nav-icon { font-size: 1.3rem; line-height: 1; }
+.nav-item:hover { color: var(--primary-dark); background: var(--primary-light); }
+
+/* State aktif: halaman yang sedang dibuka */
+/* Class 'active' ditambahkan di includes/bottom_nav.php berdasarkan basename */
+.nav-item.active {
+  color: var(--primary-dark);
+  background: var(--primary-light);
+  font-weight: 700;
+}
+/* Titik indikator di bawah item aktif */
+.nav-item.active::after {
+  content: '';
+  position: absolute; bottom: 4px;
+  width: 4px; height: 4px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+/* Badge angka merah di icon nav (notif kadaluarsa) */
+.nav-badge {
+  position: absolute; top: 4px; right: 6px;
+  background: var(--danger); color: #fff;
+  font-size: .55rem; font-weight: 800;
+  padding: 1px 5px; border-radius: 99px;
+  min-width: 16px; text-align: center;
+  border: 1.5px solid #fff;
+}
+
+/* ── 10. Alert / Notifikasi Form ───────────────────────── */
+.alert {
+  padding: .75rem 1rem;
+  border-radius: 12px;
+  font-size: .84rem; font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 8px;
+  animation: alertIn .3s var(--ease);
+}
+@keyframes alertIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.alert-ok  { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.alert-err { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+/* ── 11. Popup Notifikasi Kadaluarsa ────────────────────── */
+/* Muncul di pojok kiri bawah (di atas floating nav) */
+/* Untuk ganti posisi → ubah bottom & left/right */
+#notif-exp {
+  position: fixed; bottom: calc(var(--nav-h) + 1.5rem); right: 1rem;
+  width: 300px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  z-index: 150;
+  overflow: hidden;
+  animation: popIn .35s var(--ease-bounce);
+}
+@keyframes popIn { from { opacity:0; transform:scale(.9) translateY(16px); } to { opacity:1; transform:none; } }
+.notif-hdr {
+  background: var(--danger); color: #fff;
+  padding: .625rem 1rem;
+  font-size: .82rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.notif-close {
+  background: none; border: none; color: rgba(255,255,255,.8);
+  font-size: 1.1rem; cursor: pointer; line-height: 1; padding: 0;
+}
+.notif-body { padding: .75rem; max-height: 180px; overflow-y: auto; }
+.notif-row {
+  padding: .4rem 0; border-bottom: 1px solid #f0fdf8;
+  font-size: .78rem;
+}
+.notif-row:last-child { border-bottom: none; }
+
+/* ── 12. Log Item (riwayat transaksi) ──────────────────── */
+.log-item {
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: .5rem;
+  padding: .75rem 1rem;
+  border-radius: 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  transition: background .15s;
+}
+.log-item:hover { background: var(--primary-light); }
+
+/* ── Utility ────────────────────────────────────────────── */
+.fw-bold { font-weight: 700; }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--danger); }
+.text-ok { color: var(--ok); }
+.text-warn { color: var(--warn); }
+.text-center { text-align: center; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+.d-none { display: none !important; }
+.gap-2 { gap: .5rem; } .gap-3 { gap: .75rem; } .gap-4 { gap: 1rem; }
+.mb-3 { margin-bottom: .75rem; } .mb-4 { margin-bottom: 1rem; } .mb-5 { margin-bottom: 1.5rem; }
+.mt-3 { margin-top: .75rem; } .mt-auto { margin-top: auto; }
+.p-4 { padding: 1.25rem; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+.overflow-x { overflow-x: auto; }
+
+/* ── Responsive ─────────────────────────────────────────── */
+/* Stat grid: 2 kolom di mobile, auto-fit di tablet/desktop */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .75rem;
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .bottom-nav { bottom: .5rem; border-radius: 20px; }
+  .topbar { padding: .75rem 1rem; }
+  .page-body { padding: .75rem .875rem 0; }
+}
