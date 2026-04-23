@@ -4,6 +4,7 @@
 // Dipakai oleh staff & user untuk mencatat pemasukan stok
 // obat yang sudah ada di database (bukan tambah obat baru)
 // ============================================================
+require_once __DIR__ . '/session_handler.php';
 session_start();
 include 'koneksi.php';
 include 'auth.php';

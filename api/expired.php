@@ -1,5 +1,5 @@
 <?php
-session_start(); include 'server/koneksi.php'; include 'server/auth.php'; requireLogin();
+require_once 'server/session_handler.php'; session_start(); include 'server/koneksi.php'; include 'server/auth.php'; requireLogin();
 $user=me(); $fDiv=getDivisiFilter();
 $sudah=(int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE exp_date<CURDATE() AND $fDiv"))['n'];
 $d30=(int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE exp_date>=CURDATE() AND exp_date<=DATE_ADD(CURDATE(),INTERVAL 30 DAY) AND $fDiv"))['n'];

@@ -3,6 +3,7 @@
 // server/prosesObat.php — CRUD Obat & Transaksi
 // aksi: tambah | output | hapus
 // ============================================================
+require_once __DIR__ . '/session_handler.php';
 session_start();
 include 'koneksi.php';
 include 'auth.php';

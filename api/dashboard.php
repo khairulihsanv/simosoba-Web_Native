@@ -5,6 +5,7 @@
 // ── admin_staff : laporan stok, kadaluarsa, transaksi
 // ── staff/user  : form input & output stok langsung
 // ============================================================
+require_once 'server/session_handler.php';
 session_start();
 include 'server/koneksi.php';
 include 'server/auth.php';

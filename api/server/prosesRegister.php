@@ -4,6 +4,7 @@
 // Role baru dari register selalu 'user' (hak akses terbatas)
 // Super Admin bisa upgrade role via halaman users.php
 // ============================================================
+require_once __DIR__ . '/session_handler.php';
 session_start();
 include 'koneksi.php';
 

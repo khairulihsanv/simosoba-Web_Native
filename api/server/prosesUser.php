@@ -3,6 +3,7 @@
 // server/prosesUser.php — Kelola User (super_admin only)
 // aksi: tambah | edit | hapus
 // ============================================================
+require_once __DIR__ . '/session_handler.php';
 session_start();
 include 'koneksi.php';
 include 'auth.php';
