@@ -2,6 +2,12 @@
     "functions": {
         "api/*.php": {
             "runtime": "vercel-php@0.7.1"
+        },
+        "api/server/*.php": {
+            "runtime": "vercel-php@0.7.1"
+        },
+        "api/includes/*.php": {
+            "runtime": "vercel-php@0.7.1"
         }
     }
 }
