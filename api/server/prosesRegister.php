@@ -54,8 +54,10 @@ $stmt = mysqli_prepare($koneksi,
 );
 mysqli_stmt_bind_param($stmt, 'sssss', $nama, $username, $hash, $role, $divisi);
 
+session_write_close(); // Lepas session sebelum redirect
 if (mysqli_stmt_execute($stmt)) {
     header('Location: ../login.php?tab=login&success=registered'); exit();
 } else {
     header('Location: ../login.php?tab=register&error=db'); exit();
 }
+

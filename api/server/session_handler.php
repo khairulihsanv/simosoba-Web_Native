@@ -9,14 +9,9 @@
 
 require_once __DIR__ . '/koneksi.php';
 
-// Buat tabel session jika belum ada
-mysqli_query($koneksi, "
-    CREATE TABLE IF NOT EXISTS php_sessions (
-        session_id  VARCHAR(128) NOT NULL PRIMARY KEY,
-        data        TEXT         NOT NULL,
-        last_access INT          NOT NULL
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-");
+// Tabel php_sessions harus sudah dibuat melalui database.sql
+// Tidak lagi melakukan CREATE TABLE setiap kali session_start() dipanggil untuk mempercepat response.
+
 
 // ── Handler Functions ──────────────────────────────────────
 

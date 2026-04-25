@@ -41,4 +41,5 @@ $_SESSION['role']       = $user['role'];
 $_SESSION['divisi']     = $user['divisi'] ?? '-';
 $_SESSION['last_login'] = date('d M Y, H:i');
 
+session_write_close(); // Pastikan session tersimpan sebelum redirect
 header('Location: ../dashboard.php'); exit();
