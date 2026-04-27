@@ -94,15 +94,38 @@
       font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;
     }
 
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .btn-nav-login {
+      padding: 0.6rem 1.2rem;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      opacity: 0.85;
+    }
+    .btn-nav-login:hover {
+      opacity: 1;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    .btn-nav-register {
       padding: 0.6rem 1.5rem;
-      background: #fff; color: #005c40;
-      text-decoration: none; font-weight: 700; font-size: 0.9rem;
+      background: #fff;
+      color: #005c40;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
       border-radius: 50px;
       transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-    .btn-nav-login:hover {
+    .btn-nav-register:hover {
       background: #e0faf3;
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.2);
@@ -250,8 +273,10 @@
       <span class="nav-brand-icon">💊</span>
       <span class="nav-brand-name">SiMoSoBa</span>
     </a>
-    <a href="api/login.php?tab=login" class="btn-nav-login">Masuk</a>
-    <a href="api/login.php?tab=register" class="btn-nav-login" style="margin-left: 8px;">Daftar</a>
+    <div class="nav-actions">
+      <a href="api/login.php?tab=login" class="btn-nav-login">Masuk</a>
+      <a href="api/login.php?tab=register" class="btn-nav-register">Daftar</a>
+    </div>
   </nav>
 
   <!-- Hero Section -->
