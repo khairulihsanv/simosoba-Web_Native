@@ -1,19 +1,26 @@
 <?php
 require_once __DIR__ . '/api/server/koneksi.php';
 
-echo "<h1>Database Schema Fixer</h1>";
+echo "<h1>Database Schema Fixer v2 (TiDB Optimized)</h1>";
+
+function runFix($koneksi, $sql, $label) {
+    $res = mysqli_query($koneksi, $sql);
+    if ($res) {
+        echo "Fixing <b>$label</b>: <span style='color:green;'>SUCCESS ✅</span><br>";
+    } else {
+        echo "Fixing <b>$label</b>: <span style='color:red;'>FAILED ❌</span><br>";
+        echo "<blockquote>Error: " . mysqli_error($koneksi) . "</blockquote>";
+    }
+}
 
 // 1. Fix AUTO_INCREMENT for users
-$res = mysqli_query($koneksi, "ALTER TABLE users MODIFY id INT AUTO_INCREMENT;");
-echo "Fixing table <b>users</b>: " . ($res ? "<span style='color:green;'>SUCCESS (AUTO_INCREMENT added)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
+runFix($koneksi, "ALTER TABLE users MODIFY id INT NOT NULL AUTO_INCREMENT", "Table Users");
 
 // 2. Fix AUTO_INCREMENT for obat
-$res = mysqli_query($koneksi, "ALTER TABLE obat MODIFY id INT AUTO_INCREMENT;");
-echo "Fixing table <b>obat</b>: " . ($res ? "<span style='color:green;'>SUCCESS (AUTO_INCREMENT added)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
+runFix($koneksi, "ALTER TABLE obat MODIFY id INT NOT NULL AUTO_INCREMENT", "Table Obat");
 
 // 3. Fix AUTO_INCREMENT for transaksi
-$res = mysqli_query($koneksi, "ALTER TABLE transaksi MODIFY id INT AUTO_INCREMENT;");
-echo "Fixing table <b>transaksi</b>: " . ($res ? "<span style='color:green;'>SUCCESS (AUTO_INCREMENT added)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
+runFix($koneksi, "ALTER TABLE transaksi MODIFY id INT NOT NULL AUTO_INCREMENT", "Table Transaksi");
 
 // 4. Create php_sessions table
 $createSession = "CREATE TABLE IF NOT EXISTS php_sessions (
@@ -22,7 +29,9 @@ $createSession = "CREATE TABLE IF NOT EXISTS php_sessions (
     last_access int(11) unsigned NOT NULL,
     PRIMARY KEY (session_id)
 )";
-$res = mysqli_query($koneksi, $createSession);
-echo "Creating table <b>php_sessions</b>: " . ($res ? "<span style='color:green;'>SUCCESS (Table ready)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
+runFix($koneksi, $createSession, "Table PHP Sessions");
 
-echo "<h2>Fix Done. Silakan kembali ke <a href='api/login.php'>Halaman Login / Register</a>.</h2>";
+echo "<h2>Penting:</h2>";
+echo "<p>Jika semua bertanda <b>SUCCESS</b>, silakan coba Register lagi.</p>";
+echo "<p>Jika ada yang <b>FAILED</b>, mohon copy pesan error di atas dan kirimkan ke saya.</p>";
+echo "<h3><a href='api/login.php'>Kembali ke Login</a></h3>";
