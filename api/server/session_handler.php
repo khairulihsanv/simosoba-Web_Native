@@ -9,9 +9,16 @@
 
 require_once __DIR__ . '/koneksi.php';
 
-// Tabel php_sessions harus sudah dibuat melalui database.sql
-// Tidak lagi melakukan CREATE TABLE setiap kali session_start() dipanggil untuk mempercepat response.
-
+// Auto-create php_sessions table if it doesn't exist to prevent login loops
+// Ini sangat penting di Vercel agar tidak gagal save session secara diam-diam.
+mysqli_query($koneksi, "
+    CREATE TABLE IF NOT EXISTS php_sessions (
+        session_id varchar(128) NOT NULL,
+        data text NOT NULL,
+        last_access int(11) unsigned NOT NULL,
+        PRIMARY KEY (session_id)
+    )
+");
 
 // ── Handler Functions ──────────────────────────────────────
 

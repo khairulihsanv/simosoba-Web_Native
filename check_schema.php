@@ -1,70 +1,28 @@
 <?php
 require_once __DIR__ . '/api/server/koneksi.php';
 
-function fixTable($koneksi, $table, $createSql) {
-    echo "<b>Fixing table $table...</b><br>";
-    $res = mysqli_query($koneksi, "RENAME TABLE $table TO {$table}_old");
-    if (!$res) {
-        // Jika rename gagal, mungkin karena tidak ada tabel lama
-        echo "Note: Could not rename $table to {$table}_old. Continuing.<br>";
-    }
-    
-    if (mysqli_query($koneksi, $createSql)) {
-        echo "Table $table recreated with AUTO_INCREMENT.<br>";
-        if ($res) {
-            $copy = mysqli_query($koneksi, "INSERT INTO $table SELECT * FROM {$table}_old");
-            if ($copy) {
-                mysqli_query($koneksi, "DROP TABLE {$table}_old");
-                echo "Data copied and old table dropped.<br>";
-            } else {
-                echo "<span style='color:red;'>Failed to copy data: " . mysqli_error($koneksi) . "</span><br>";
-            }
-        }
-    } else {
-        echo "<span style='color:red;'>Failed to create $table: " . mysqli_error($koneksi) . "</span><br>";
-    }
-    echo "<br>";
-}
+echo "<h1>Database Schema Fixer</h1>";
 
-$createUsers = "CREATE TABLE users (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    nama        VARCHAR(100)  NOT NULL,
-    username    VARCHAR(50)   NOT NULL UNIQUE,
-    password    VARCHAR(255)  NOT NULL,
-    role        ENUM('super_admin','admin_staff','staff','user') NOT NULL DEFAULT 'user',
-    divisi      VARCHAR(100)  DEFAULT NULL,
-    is_active   TINYINT(1)   NOT NULL DEFAULT 1,
-    last_login  DATETIME     DEFAULT NULL,
-    created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP
+// 1. Fix AUTO_INCREMENT for users
+$res = mysqli_query($koneksi, "ALTER TABLE users MODIFY id INT AUTO_INCREMENT;");
+echo "Fixing table <b>users</b>: " . ($res ? "<span style='color:green;'>SUCCESS (AUTO_INCREMENT added)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
+
+// 2. Fix AUTO_INCREMENT for obat
+$res = mysqli_query($koneksi, "ALTER TABLE obat MODIFY id INT AUTO_INCREMENT;");
+echo "Fixing table <b>obat</b>: " . ($res ? "<span style='color:green;'>SUCCESS (AUTO_INCREMENT added)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
+
+// 3. Fix AUTO_INCREMENT for transaksi
+$res = mysqli_query($koneksi, "ALTER TABLE transaksi MODIFY id INT AUTO_INCREMENT;");
+echo "Fixing table <b>transaksi</b>: " . ($res ? "<span style='color:green;'>SUCCESS (AUTO_INCREMENT added)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
+
+// 4. Create php_sessions table
+$createSession = "CREATE TABLE IF NOT EXISTS php_sessions (
+    session_id varchar(128) NOT NULL,
+    data text NOT NULL,
+    last_access int(11) unsigned NOT NULL,
+    PRIMARY KEY (session_id)
 )";
-fixTable($koneksi, 'users', $createUsers);
+$res = mysqli_query($koneksi, $createSession);
+echo "Creating table <b>php_sessions</b>: " . ($res ? "<span style='color:green;'>SUCCESS (Table ready)</span>" : "<span style='color:red;'>FAILED - " . mysqli_error($koneksi) . "</span>") . "<br>";
 
-$createObat = "CREATE TABLE obat (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    nama        VARCHAR(150)  NOT NULL,
-    kategori    VARCHAR(100)  NOT NULL,
-    satuan      VARCHAR(50)   NOT NULL DEFAULT 'Tablet',
-    stok        INT           NOT NULL DEFAULT 0,
-    stok_min    INT           NOT NULL DEFAULT 10,
-    exp_date    DATE          NOT NULL,
-    divisi      VARCHAR(100)  DEFAULT NULL,
-    created_at  DATETIME      DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)";
-fixTable($koneksi, 'obat', $createObat);
-
-$createTransaksi = "CREATE TABLE transaksi (
-    id              INT AUTO_INCREMENT PRIMARY KEY,
-    obat_id         INT          NOT NULL,
-    user_id         INT          NOT NULL,
-    tipe            ENUM('masuk','keluar') NOT NULL,
-    jumlah          INT          NOT NULL,
-    stok_sesudah    INT          NOT NULL,
-    keterangan      TEXT         DEFAULT NULL,
-    created_at      DATETIME     DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (obat_id) REFERENCES obat(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-)";
-fixTable($koneksi, 'transaksi', $createTransaksi);
-
-echo "<h2>Fix Done. Silakan akses halaman login.</h2>";
+echo "<h2>Fix Done. Silakan kembali ke <a href='api/login.php'>Halaman Login / Register</a>.</h2>";

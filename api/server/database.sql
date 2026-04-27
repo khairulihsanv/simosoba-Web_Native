@@ -89,3 +89,16 @@ INSERT INTO obat (nama, kategori, satuan, stok, stok_min, exp_date, divisi) VALU
 ('Amlodipine 5mg',     'Antihipertensi', 'Tablet',  12, 25, DATE_ADD(CURDATE(), INTERVAL 20 DAY), 'Apotek A'),
 ('Cetirizine 10mg',    'Antihistamin',   'Tablet',  80, 20, DATE_ADD(CURDATE(), INTERVAL 45 DAY), 'Apotek A'),
 ('Omeprazole 20mg',    'Antasida',       'Kapsul',  35, 15, DATE_ADD(CURDATE(), INTERVAL 8 DAY),  'Apotek A');
+
+-- ============================================================
+-- TABEL: php_sessions
+-- ============================================================
+-- Dibutuhkan untuk menyimpan session agar tidak ter-reset
+-- di environment serverless Vercel.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS php_sessions (
+    session_id varchar(128) NOT NULL,
+    data text NOT NULL,
+    last_access int(11) unsigned NOT NULL,
+    PRIMARY KEY (session_id)
+);
