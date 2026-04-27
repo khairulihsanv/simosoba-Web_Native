@@ -6,6 +6,7 @@
 // ============================================================
 
 // Hanya izinkan dari halaman internal (bukan akses langsung)
+require_once __DIR__ . '/session_handler.php'; // Wajib untuk Vercel agar session dikenali
 session_start();
 if (empty($_SESSION['user_id'])) {
     http_response_code(403);
