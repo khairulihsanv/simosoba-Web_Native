@@ -231,95 +231,34 @@ if (isSuperAdmin()): ?>
     </div>
   </div>
 
-  <!-- BPS API Widget -->
-  <div class="content-card" style="margin-bottom:1.5rem;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem;">
-      <div class="card-title">📊 Data BPS — Statistik Kesehatan Indonesia</div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-        <!-- Dropdown pilih jenis data BPS yang ditampilkan -->
-        <select id="bps-select" class="form-ctrl" style="max-width:220px;font-size:.8rem;"
-                onchange="loadBPS(this.value)">
-          <option value="sarkes">Sarana Kesehatan</option>
-          <option value="tenakes">Tenaga Kesehatan</option>
-          <option value="penduduk">Jumlah Penduduk</option>
-        </select>
-        <button onclick="loadBPS(document.getElementById('bps-select').value)"
-                class="btn-primary" style="padding:.4rem .75rem;font-size:.78rem;">
-          <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
+  <!-- BPS API Widget: Statistik Fasilitas Kesehatan -->
+  <div class="content-card" style="margin-bottom:1.5rem; border-left: 4px solid var(--primary);">
+    <div style="margin-bottom:1.25rem;">
+      <div class="card-title" style="font-size:1rem; display:flex; align-items:center; gap:8px;">
+        <i class="bi bi-graph-up-arrow" style="color:var(--primary);"></i>
+        Data BPS — Sebaran Fasilitas Kesehatan Nasional
       </div>
-    </div>
-
-    <!-- Info endpoint BPS yang digunakan (untuk referensi Postman) -->
-    <div id="bps-endpoint-info" style="background:var(--primary-light);border-radius:10px;
-         padding:.6rem 1rem;margin-bottom:.875rem;font-size:.75rem;color:var(--text-sub);
-         font-family:monospace;word-break:break-all;">
-      <strong style="color:var(--primary-dark);">Endpoint aktif:</strong>
-      <span id="bps-url-display">—</span>
+      <p style="font-size:.78rem; color:var(--text-sub); margin-top:4px; line-height:1.5;">
+        Data ini disajikan sebagai referensi strategis untuk memantau persebaran sarana kesehatan di Indonesia. Informasi ini membantu manajemen dalam memproyeksikan distribusi obat ke berbagai wilayah berdasarkan ketersediaan fasilitas medis resmi dari BPS.
+      </p>
     </div>
 
     <!-- Tabel hasil data BPS -->
-    <div id="bps-loading" style="text-align:center;padding:2rem;color:var(--text-muted);display:none;">
-      <div style="font-size:1.5rem;animation:spin 1s linear infinite;display:inline-block;">⏳</div>
-      <div style="font-size:.84rem;margin-top:.5rem;">Mengambil data dari BPS...</div>
+    <div id="bps-loading" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+      <div class="spinner" style="width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block;"></div>
+      <div style="font-size:.8rem;margin-top:.75rem; font-weight:500;">Sinkronisasi data BPS...</div>
     </div>
-    <div id="bps-error"  style="display:none;color:var(--danger);font-size:.84rem;text-align:center;padding:1rem;"></div>
-    <div id="bps-table"  style="overflow-x:auto;"></div>
+    
+    <div id="bps-error"  style="display:none; color:var(--danger); font-size:.82rem; text-align:center; padding:1.5rem; background:#fff5f5; border-radius:12px; margin-top:1rem;"></div>
+    
+    <div id="bps-table" class="overflow-x"></div>
 
-    <!-- Panduan Postman -->
-    <details style="margin-top:1rem;">
-      <summary style="cursor:pointer;font-size:.78rem;font-weight:700;color:var(--primary-dark);
-                      padding:.5rem 0;list-style:none;display:flex;align-items:center;gap:6px;">
-        <i class="bi bi-send-fill"></i> Panduan API via Postman
-      </summary>
-      <div style="margin-top:.75rem;background:#f8fffe;border-radius:12px;
-                  border:1px solid var(--border);padding:1rem;font-size:.8rem;">
-        <div style="font-weight:700;color:var(--text-main);margin-bottom:.5rem;">🔗 Base URL BPS WebAPI:</div>
-        <code style="display:block;background:#0f172a;color:#a8ff3e;padding:.625rem .875rem;
-                     border-radius:8px;margin-bottom:.875rem;word-break:break-all;">
-          https://webapi.bps.go.id/v1/api/list/model/statictable/domain/0000/lang/ind/key/b928ea9a43f487ccb994b6bf2f308278
-        </code>
-        <div style="font-weight:700;color:var(--text-main);margin-bottom:.5rem;">📋 Endpoint yang bisa dicoba di Postman:</div>
-        <div class="overflow-x">
-          <table style="width:100%;border-collapse:collapse;font-size:.75rem;">
-            <thead>
-              <tr style="background:var(--primary-light);">
-                <th style="padding:.4rem .6rem;text-align:left;color:var(--primary-dark);">Nama Data</th>
-                <th style="padding:.4rem .6rem;text-align:left;color:var(--primary-dark);">Method</th>
-                <th style="padding:.4rem .6rem;text-align:left;color:var(--primary-dark);">URL</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php
-              $KEY = 'b928ea9a43f487ccb994b6bf2f308278';
-              $endpoints = [
-                ['Static Table List',         'GET', "https://webapi.bps.go.id/v1/api/list/model/statictable/domain/0000/lang/ind/key/$KEY"],
-                ['Jumlah Penduduk',           'GET', "https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/259/lang/ind/key/$KEY"],
-                ['Sarana Kesehatan',          'GET', "https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2071/lang/ind/key/$KEY"],
-                ['Angka Harapan Hidup',       'GET', "https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/1932/lang/ind/key/$KEY"],
-                ['Tenaga Kesehatan',          'GET', "https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2072/lang/ind/key/$KEY"],
-                ['Press Release (terbaru)',   'GET', "https://webapi.bps.go.id/v1/api/list/model/pressrelease/domain/0000/lang/ind/key/$KEY"],
-              ];
-              foreach ($endpoints as [$nm,$mt,$url]):
-              ?>
-              <tr style="border-bottom:1px solid var(--border);">
-                <td style="padding:.4rem .6rem;font-weight:600;"><?= $nm ?></td>
-                <td style="padding:.4rem .6rem;"><span class="badge badge-ok"><?= $mt ?></span></td>
-                <td style="padding:.4rem .6rem;max-width:300px;word-break:break-all;color:var(--info);">
-                  <a href="<?= $url ?>" target="_blank" style="color:var(--info);text-decoration:none;font-family:monospace;font-size:.7rem;">
-                    <?= htmlspecialchars($url) ?>
-                  </a>
-                </td>
-              </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-        <div style="margin-top:.75rem;color:var(--text-muted);">
-          💡 Di Postman: buat request GET → paste URL → Send. Tidak perlu header tambahan, key sudah ada di URL.
-        </div>
-      </div>
-    </details>
+    <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:.72rem; color:var(--text-muted);">Sumber: <b>webapi.bps.go.id</b></span>
+      <button onclick="loadBPS()" class="btn-primary" style="padding:.35rem .75rem; font-size:.7rem; background:transparent; color:var(--text-sub); border:1px solid var(--border); box-shadow:none;">
+        <i class="bi bi-arrow-clockwise"></i> Perbarui Data
+      </button>
+    </div>
   </div>
 
 <?php /* ════════════════════════════════════════════════════
@@ -618,57 +557,35 @@ function previewStok(sel, prevId, valId) {
 }
 
 <?php if (isSuperAdmin()): ?>
-// ── BPS API Integration ───────────────────────────────────
-// Endpoint mapping untuk tiap pilihan dropdown
+// ── BPS API Integration (Professional Edition) ──────────────
 const BPS_KEY = 'b928ea9a43f487ccb994b6bf2f308278';
-const BPS_BASE = 'https://webapi.bps.go.id/v1/api/list';
+const BPS_URL = `https://webapi.bps.go.id/v1/api/list/model/statictable/domain/0000/lang/ind/key/${BPS_KEY}`;
 
-const bpsEndpoints = {
-  // var 2071 = Sarana Kesehatan (puskesmas, RS, dll)
-  sarkes:   `${BPS_BASE}/model/statictable/domain/0000/lang/ind/key/${BPS_KEY}`,
-  // var 2072 = Tenaga Kesehatan
-  tenakes:  `${BPS_BASE}/model/statictable/domain/0000/lang/ind/key/${BPS_KEY}`,
-  // Jumlah penduduk
-  penduduk: `${BPS_BASE}/model/data/domain/0000/var/259/lang/ind/key/${BPS_KEY}`,
-};
-
-const bpsLabels = {
-  sarkes:   'Daftar Static Table BPS — Kesehatan & Sosial',
-  tenakes:  'Daftar Static Table BPS (Tenaga Kesehatan)',
-  penduduk: 'Jumlah Penduduk Indonesia (Var 259)',
-};
-
-// Muat data dari BPS API
-async function loadBPS(type) {
-  const url     = bpsEndpoints[type] || bpsEndpoints.sarkes;
+async function loadBPS() {
   const loading = document.getElementById('bps-loading');
   const errEl   = document.getElementById('bps-error');
   const tableEl = document.getElementById('bps-table');
-  const urlDisp = document.getElementById('bps-url-display');
 
-  urlDisp.textContent = url;
+  if (!loading) return;
   loading.style.display = 'block';
   errEl.style.display   = 'none';
   tableEl.innerHTML     = '';
 
   try {
-    // Fetch via PHP proxy untuk hindari CORS
-    const res  = await fetch('server/bps_proxy.php?url=' + encodeURIComponent(url));
+    const res  = await fetch('server/bps_proxy.php?url=' + encodeURIComponent(BPS_URL));
     const json = await res.json();
 
     loading.style.display = 'none';
 
     if (!json || json.status !== 'OK') {
-      throw new Error(json?.message || 'Response tidak valid dari BPS');
+      throw new Error(json?.message || 'Gagal sinkronisasi dengan server BPS.');
     }
 
-    // Ambil array data dari response BPS
     const dataArr = Array.isArray(json.data) ? json.data : [];
-    // BPS mengembalikan [paginasi, [data_rows]]
-    const rows = dataArr.length > 1 && Array.isArray(dataArr[1]) ? dataArr[1] : dataArr;
+    const rows    = dataArr.length > 1 && Array.isArray(dataArr[1]) ? dataArr[1] : dataArr;
 
     if (!rows || rows.length === 0) {
-      tableEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">Tidak ada data tersedia.</p>';
+      tableEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem;">Informasi belum tersedia saat ini.</div>';
       return;
     }
 
