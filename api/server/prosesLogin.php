@@ -5,7 +5,7 @@
 // ============================================================
 require_once __DIR__ . '/session_handler.php';
 session_start();
-include 'koneksi.php';
+require_once __DIR__ . '/koneksi.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../login.php'); exit();

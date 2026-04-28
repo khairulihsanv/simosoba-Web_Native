@@ -5,8 +5,8 @@
 // ============================================================
 require_once __DIR__ . '/session_handler.php';
 session_start();
-include 'koneksi.php';
-include 'auth.php';
+require_once __DIR__ . '/koneksi.php';
+require_once __DIR__ . '/auth.php';
 requireLogin();
 
 $aksi = $_POST['aksi'] ?? $_GET['aksi'] ?? '';
