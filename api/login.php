@@ -56,7 +56,7 @@ $sucKey = $_GET['success'] ?? '';
       align-items: center;
       justify-content: center;
       position: relative;
-      overflow: hidden;
+      padding: 2rem 0; /* Tambahkan padding agar tidak mentok di HP */
       -webkit-font-smoothing: antialiased;
     }
 

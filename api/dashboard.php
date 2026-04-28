@@ -561,7 +561,11 @@ function previewStok(sel, prevId, valId) {
 const BPS_KEY = 'b928ea9a43f487ccb994b6bf2f308278';
 const BPS_URL = `https://webapi.bps.go.id/v1/api/list/model/statictable/domain/0000/lang/ind/key/${BPS_KEY}`;
 
-async function loadBPS() {
+const bpsLabels = {
+  'sarkes': 'Data Fasilitas Kesehatan'
+};
+
+async function loadBPS(type = 'sarkes') {
   const loading = document.getElementById('bps-loading');
   const errEl   = document.getElementById('bps-error');
   const tableEl = document.getElementById('bps-table');
@@ -581,8 +585,8 @@ async function loadBPS() {
       throw new Error(json?.message || 'Gagal sinkronisasi dengan server BPS.');
     }
 
-    const dataArr = Array.isArray(json.data) ? json.data : [];
-    const rows    = dataArr.length > 1 && Array.isArray(dataArr[1]) ? dataArr[1] : dataArr;
+    // TiDB / BPS API Structure handling
+    const rows = (json.data && json.data[1]) ? json.data[1] : (Array.isArray(json.data) ? json.data : []);
 
     if (!rows || rows.length === 0) {
       tableEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem;">Informasi belum tersedia saat ini.</div>';
@@ -591,7 +595,7 @@ async function loadBPS() {
 
     // Bangun tabel HTML dari data BPS
     const keys = Object.keys(rows[0]).slice(0, 5); // ambil max 5 kolom
-    let html = `<p style="font-size:.72rem;color:var(--text-muted);margin-bottom:.5rem;">${bpsLabels[type]} — ${rows.length} entri</p>`;
+    let html = `<p style="font-size:.72rem;color:var(--text-muted);margin-bottom:.5rem;">${bpsLabels[type] || 'Data Statistik'} — ${rows.length} entri</p>`;
     html += '<table class="table"><thead><tr>';
     keys.forEach(k => { html += `<th>${k}</th>`; });
     html += '</tr></thead><tbody>';
@@ -602,15 +606,14 @@ async function loadBPS() {
     });
     html += '</tbody></table>';
     if (rows.length > 10) {
-      html += `<p style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.5rem;">Menampilkan 10 dari ${rows.length} data. Gunakan Postman untuk data lengkap.</p>`;
+      html += `<p style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.5rem;">Menampilkan 10 dari ${rows.length} data.</p>`;
     }
     tableEl.innerHTML = html;
 
   } catch (e) {
     loading.style.display = 'none';
     errEl.style.display   = 'block';
-    errEl.textContent     = '⚠️ Gagal ambil data BPS: ' + e.message +
-                            '. Coba buka endpoint langsung di browser atau Postman.';
+    errEl.textContent     = '⚠️ Gagal ambil data BPS: ' + e.message;
   }
 }
 
