@@ -49,10 +49,15 @@ $hash = password_hash($password, PASSWORD_DEFAULT);
 // Untuk ganti default role, ubah 'user' di bawah ini
 $role = 'user';
 
+// --- LOGIKA MANUAL ID (Solusi jika AUTO_INCREMENT di DB bermasalah) ---
+$resId = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM users");
+$rowId = mysqli_fetch_assoc($resId);
+$nextId = (int)($rowId['max_id'] ?? 0) + 1;
+
 $stmt = mysqli_prepare($koneksi,
-    "INSERT INTO users (nama, username, password, role, divisi) VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO users (id, nama, username, password, role, divisi) VALUES (?, ?, ?, ?, ?, ?)"
 );
-mysqli_stmt_bind_param($stmt, 'sssss', $nama, $username, $hash, $role, $divisi);
+mysqli_stmt_bind_param($stmt, 'isssss', $nextId, $nama, $username, $hash, $role, $divisi);
 
 session_write_close(); // Lepas session sebelum redirect
 if (mysqli_stmt_execute($stmt)) {

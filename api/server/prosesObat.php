@@ -26,20 +26,31 @@ if ($aksi === 'tambah') {
 
     if (!$nama || !$kategori || !$exp_date) { redirStok('error','invalid'); }
 
+    // --- LOGIKA MANUAL ID OBAT ---
+    $resO = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM obat");
+    $rowO = mysqli_fetch_assoc($resO);
+    $nextO = (int)($rowO['max_id'] ?? 0) + 1;
+
     $stmt = mysqli_prepare($koneksi,
-        "INSERT INTO obat (nama,kategori,satuan,stok,stok_min,exp_date,divisi) VALUES (?,?,?,?,?,?,?)"
+        "INSERT INTO obat (id,nama,kategori,satuan,stok,stok_min,exp_date,divisi) VALUES (?,?,?,?,?,?,?,?)"
     );
-    mysqli_stmt_bind_param($stmt,'sssiiis',$nama,$kategori,$satuan,$stok,$stok_min,$exp_date,$divisi);
+    mysqli_stmt_bind_param($stmt,'isssiiis',$nextO,$nama,$kategori,$satuan,$stok,$stok_min,$exp_date,$divisi);
 
     if (mysqli_stmt_execute($stmt)) {
         // Catat ke log jika ada stok awal
         if ($stok > 0) {
-            $oid = mysqli_insert_id($koneksi);
+            $oid = $nextO;
             $uid = $_SESSION['user_id'];
+            
+            // --- LOGIKA MANUAL ID TRANSAKSI ---
+            $resT = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM transaksi");
+            $rowT = mysqli_fetch_assoc($resT);
+            $nextT = (int)($rowT['max_id'] ?? 0) + 1;
+
             $log = mysqli_prepare($koneksi,
-                "INSERT INTO transaksi (obat_id,user_id,tipe,jumlah,stok_sesudah,keterangan) VALUES (?,?,'masuk',?,?,'Stok awal')"
+                "INSERT INTO transaksi (id,obat_id,user_id,tipe,jumlah,stok_sesudah,keterangan) VALUES (?,?,?,'masuk',?,?,'Stok awal')"
             );
-            mysqli_stmt_bind_param($log,'iiii',$oid,$uid,$stok,$stok);
+            mysqli_stmt_bind_param($log,'iiiii',$nextT,$oid,$uid,$stok,$stok);
             mysqli_stmt_execute($log);
         }
         redirStok('success','added');
@@ -62,10 +73,15 @@ if ($aksi === 'output') {
     $baru = $obat['stok'] - $jumlah;
     mysqli_query($koneksi,"UPDATE obat SET stok=$baru WHERE id=$obat_id");
 
+    // --- LOGIKA MANUAL ID TRANSAKSI ---
+    $resT = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM transaksi");
+    $rowT = mysqli_fetch_assoc($resT);
+    $nextT = (int)($rowT['max_id'] ?? 0) + 1;
+
     $log = mysqli_prepare($koneksi,
-        "INSERT INTO transaksi (obat_id,user_id,tipe,jumlah,stok_sesudah,keterangan) VALUES (?,?,'keluar',?,?,?)"
+        "INSERT INTO transaksi (id,obat_id,user_id,tipe,jumlah,stok_sesudah,keterangan) VALUES (?,?,?,'keluar',?,?,?)"
     );
-    mysqli_stmt_bind_param($log,'iiiis',$obat_id,$uid,$jumlah,$baru,$keterangan);
+    mysqli_stmt_bind_param($log,'iiiiis',$nextT,$obat_id,$uid,$jumlah,$baru,$keterangan);
     mysqli_stmt_execute($log);
     redirStok('success','output');
 }

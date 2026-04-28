@@ -18,8 +18,13 @@ if ($aksi === 'tambah') {
     $divisi=$role==='super_admin'?null:($_POST['divisi']??'');
     if(!$nama||!$uname||!$pass){ redirUser('error','invalid'); }
     $hash = password_hash($pass, PASSWORD_DEFAULT);
-    $s=mysqli_prepare($koneksi,"INSERT INTO users(nama,username,password,role,divisi) VALUES(?,?,?,?,?)");
-    mysqli_stmt_bind_param($s,'sssss',$nama,$uname,$hash,$role,$divisi);
+    // --- LOGIKA MANUAL ID ---
+    $resId = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM users");
+    $rowId = mysqli_fetch_assoc($resId);
+    $nextId = (int)($rowId['max_id'] ?? 0) + 1;
+
+    $s=mysqli_prepare($koneksi,"INSERT INTO users(id,nama,username,password,role,divisi) VALUES(?,?,?,?,?,?)");
+    mysqli_stmt_bind_param($s,'isssss',$nextId,$nama,$uname,$hash,$role,$divisi);
     mysqli_stmt_execute($s) ? redirUser('success','added') : redirUser('error','duplicate');
 }
 

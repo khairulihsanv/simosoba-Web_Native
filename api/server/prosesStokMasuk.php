@@ -33,12 +33,17 @@ $stok_baru = $obat['stok'] + $jumlah;
 // Update stok di tabel obat
 mysqli_query($koneksi, "UPDATE obat SET stok = $stok_baru WHERE id = $obat_id");
 
+// --- LOGIKA MANUAL ID TRANSAKSI ---
+$resT = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM transaksi");
+$rowT = mysqli_fetch_assoc($resT);
+$nextT = (int)($rowT['max_id'] ?? 0) + 1;
+
 // Catat ke log transaksi sebagai tipe 'masuk'
 $stmt = mysqli_prepare($koneksi,
-    "INSERT INTO transaksi (obat_id, user_id, tipe, jumlah, stok_sesudah, keterangan)
-     VALUES (?, ?, 'masuk', ?, ?, ?)"
+    "INSERT INTO transaksi (id, obat_id, user_id, tipe, jumlah, stok_sesudah, keterangan)
+     VALUES (?, ?, ?, 'masuk', ?, ?, ?)"
 );
-mysqli_stmt_bind_param($stmt, 'iiiis', $obat_id, $uid, $jumlah, $stok_baru, $keterangan);
+mysqli_stmt_bind_param($stmt, 'iiiiis', $nextT, $obat_id, $uid, $jumlah, $stok_baru, $keterangan);
 mysqli_stmt_execute($stmt);
 
 header('Location: ../dashboard.php?success=masuk'); exit();
