@@ -13,6 +13,9 @@ function runFix($koneksi, $sql, $label) {
     }
 }
 
+// Matikan pengecekan foreign key sementara agar bisa modifikasi kolom ID
+mysqli_query($koneksi, "SET FOREIGN_KEY_CHECKS = 0");
+
 // 1. Fix AUTO_INCREMENT for users
 runFix($koneksi, "ALTER TABLE users MODIFY id INT NOT NULL AUTO_INCREMENT", "Table Users");
 
@@ -21,6 +24,9 @@ runFix($koneksi, "ALTER TABLE obat MODIFY id INT NOT NULL AUTO_INCREMENT", "Tabl
 
 // 3. Fix AUTO_INCREMENT for transaksi
 runFix($koneksi, "ALTER TABLE transaksi MODIFY id INT NOT NULL AUTO_INCREMENT", "Table Transaksi");
+
+// Aktifkan kembali pengecekan foreign key
+mysqli_query($koneksi, "SET FOREIGN_KEY_CHECKS = 1");
 
 // 4. Create php_sessions table
 $createSession = "CREATE TABLE IF NOT EXISTS php_sessions (
