@@ -63,6 +63,7 @@ session_write_close(); // Lepas session sebelum redirect
 if (mysqli_stmt_execute($stmt)) {
     header('Location: ../login.php?tab=login&success=registered'); exit();
 } else {
-    header('Location: ../login.php?tab=register&error=db'); exit();
+    // Debug: Tampilkan error jika gagal insert
+    die("Gagal menyimpan data ke database. Error: " . mysqli_error($koneksi));
 }
 
