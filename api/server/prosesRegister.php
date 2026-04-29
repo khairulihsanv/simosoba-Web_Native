@@ -45,9 +45,8 @@ if (mysqli_stmt_num_rows($cek) > 0) {
 // Hash password sebelum disimpan — JANGAN simpan plain text
 $hash = password_hash($password, PASSWORD_DEFAULT);
 
-// Role default untuk registrasi mandiri adalah 'user'
-// Untuk ganti default role, ubah 'user' di bawah ini
-$role = 'user';
+// Role default untuk registrasi mandiri adalah 'staff'
+$role = 'staff';
 
 // --- LOGIKA MANUAL ID (Solusi jika AUTO_INCREMENT di DB bermasalah) ---
 $resId = mysqli_query($koneksi, "SELECT MAX(id) as max_id FROM users");

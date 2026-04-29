@@ -42,15 +42,14 @@ function isAdminStaff()  { return ($_SESSION['role'] ?? '') === 'admin_staff'; }
 function isStaff()       { return ($_SESSION['role'] ?? '') === 'staff'; }
 function isUser()        { return ($_SESSION['role'] ?? '') === 'user'; }
 
-// ── Apakah bisa input/output stok? ────────────────────────
-// super_admin, admin_staff, staff → bisa. user → tidak.
-function canInputStok()  { return in_array($_SESSION['role'] ?? '', ['super_admin','admin_staff','staff']); }
+// super_admin, admin_staff, staff, user → bisa.
+function canInputStok()  { return in_array($_SESSION['role'] ?? '', ['super_admin','admin_staff','staff','user']); }
 
 // ── Apakah bisa tambah/hapus obat? ────────────────────────
 function canManageObat() { return in_array($_SESSION['role'] ?? '', ['super_admin','admin_staff']); }
 
-// ── Apakah bisa lihat laporan? ────────────────────────────
-function canLihatLaporan() { return in_array($_SESSION['role'] ?? '', ['super_admin','admin_staff']); }
+// super_admin, admin_staff, staff, user → bisa.
+function canLihatLaporan() { return in_array($_SESSION['role'] ?? '', ['super_admin','admin_staff','staff','user']); }
 
 // ── Filter divisi untuk query SQL ─────────────────────────
 // super_admin → lihat semua (WHERE 1=1)
@@ -60,7 +59,7 @@ function getDivisiFilter($alias = '') {
     if (isSuperAdmin()) return "1=1";
     $divisi = mysqli_real_escape_string($GLOBALS['koneksi'], $_SESSION['divisi'] ?? '');
     $col    = $alias ? "$alias.divisi" : "divisi";
-    return "$col = '$divisi'";
+    return "($col = '$divisi' OR $col IS NULL OR $col = '')";
 }
 
 // ── Ambil data session user aktif ─────────────────────────
@@ -80,6 +79,6 @@ function roleLabel($role) {
         'super_admin' => '⚡ Super Admin',
         'admin_staff' => '🏥 Admin Staff',
         'staff'       => '💊 Staff',
-        'user'        => '👤 User',
+        'user'        => '💊 Staff (User)',
     ][$role] ?? $role;
 }
