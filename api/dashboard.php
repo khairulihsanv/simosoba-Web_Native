@@ -582,20 +582,22 @@ const BPS_KEY = 'b928ea9a43f487ccb994b6bf2f308278';
 const BPS_CONFIG = {
   obat: {
     name: 'Ketersediaan Obat & Vaksin (Puskesmas)',
-    // Menambahkan /th/ untuk data tahun tertentu (misal 2022/2023)
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/1478/th/2022/key/${BPS_KEY}`,
+    // Tahun 2017 adalah tahun terakhir yang tersedia untuk indikator 1478
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/1478/th/2017/key/${BPS_KEY}`,
     icon: 'bi-capsule',
     color: 'var(--ok)'
   },
   sarkes: {
     name: 'Fasilitas Kesehatan (RS & Puskesmas)',
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/232/th/2022/key/${BPS_KEY}`,
+    // Tahun 2015 adalah tahun terakhir yang tersedia untuk indikator 232
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/232/th/2015/key/${BPS_KEY}`,
     icon: 'bi-hospital',
     color: 'var(--primary)'
   },
   populasi: {
     name: 'Demografi Penduduk (Kelompok Umur)',
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2135/th/2020/key/${BPS_KEY}`,
+    // Proyeksi tahun 2023 tersedia untuk indikator 2135
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2135/th/2023/key/${BPS_KEY}`,
     icon: 'bi-people',
     color: 'var(--info)'
   }
