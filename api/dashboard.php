@@ -231,33 +231,51 @@ if (isSuperAdmin()): ?>
     </div>
   </div>
 
-  <!-- BPS API Widget: Statistik Fasilitas Kesehatan -->
-  <div class="content-card" style="margin-bottom:1.5rem; border-left: 4px solid var(--primary);">
-    <div style="margin-bottom:1.25rem;">
-      <div class="card-title" style="font-size:1rem; display:flex; align-items:center; gap:8px;">
-        <i class="bi bi-graph-up-arrow" style="color:var(--primary);"></i>
-        Data BPS — Sebaran Fasilitas Kesehatan Nasional
+  <!-- BPS API Widget: Market & Health Insights -->
+  <div class="content-card" style="margin-bottom:1.5rem; border-left: 4px solid var(--primary); position: relative; overflow: hidden;">
+    <!-- Dekorasi Background -->
+    <div style="position:absolute; top:-20px; right:-20px; font-size:5rem; opacity:0.03; color:var(--primary); transform:rotate(15deg); pointer-events:none;">
+      <i class="bi bi-graph-up"></i>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <div class="card-title" style="font-size:1rem; display:flex; align-items:center; gap:8px;">
+          <i class="bi bi-database-fill-check" style="color:var(--primary);"></i>
+          Wawasan Strategis BPS
+        </div>
+        <p style="font-size:.78rem; color:var(--text-sub); margin-top:4px; max-width:500px; line-height:1.5;">
+          Data statistik nasional terintegrasi untuk membantu perencanaan stok dan analisis pasar obat.
+        </p>
       </div>
-      <p style="font-size:.78rem; color:var(--text-sub); margin-top:4px; line-height:1.5;">
-        Data ini disajikan sebagai referensi strategis untuk memantau persebaran sarana kesehatan di Indonesia. Informasi ini membantu manajemen dalam memproyeksikan distribusi obat ke berbagai wilayah berdasarkan ketersediaan fasilitas medis resmi dari BPS.
-      </p>
+      
+      <div style="display:flex; gap:8px;">
+        <select id="bps-category" class="form-ctrl" style="font-size:.75rem; padding:.35rem .75rem; width:auto; height:32px;" onchange="changeBPSCategory()">
+          <option value="obat">💊 Ketersediaan Obat</option>
+          <option value="sarkes">🏥 Fasilitas Kesehatan</option>
+          <option value="populasi">👥 Demografi Penduduk</option>
+        </select>
+        <button onclick="loadBPS()" class="btn-primary" style="padding:.35rem .75rem; font-size:.75rem; height:32px; background:var(--primary-light); color:var(--primary-dark); border:none; box-shadow:none;">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
     </div>
 
-    <!-- Tabel hasil data BPS -->
-    <div id="bps-loading" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
-      <div class="spinner" style="width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block;"></div>
-      <div style="font-size:.8rem;margin-top:.75rem; font-weight:500;">Sinkronisasi data BPS...</div>
+    <!-- Container Data -->
+    <div id="bps-container" style="min-height:200px;">
+        <div id="bps-loading" style="text-align:center;padding:3rem 0;color:var(--text-muted);">
+          <div class="spinner" style="width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block;"></div>
+          <div style="font-size:.8rem;margin-top:1rem; font-weight:600; letter-spacing:0.5px;">SINKRONISASI DATA BPS...</div>
+        </div>
+        
+        <div id="bps-error"  style="display:none; color:var(--danger); font-size:.82rem; text-align:center; padding:1.5rem; background:#fff5f5; border:1px solid #fee2e2; border-radius:12px;"></div>
+        
+        <div id="bps-content"></div>
     </div>
-    
-    <div id="bps-error"  style="display:none; color:var(--danger); font-size:.82rem; text-align:center; padding:1.5rem; background:#fff5f5; border-radius:12px; margin-top:1rem;"></div>
-    
-    <div id="bps-table" class="overflow-x"></div>
 
-    <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:.72rem; color:var(--text-muted);">Sumber: <b>webapi.bps.go.id</b></span>
-      <button onclick="loadBPS()" class="btn-primary" style="padding:.35rem .75rem; font-size:.7rem; background:transparent; color:var(--text-sub); border:1px solid var(--border); box-shadow:none;">
-        <i class="bi bi-arrow-clockwise"></i> Perbarui Data
-      </button>
+    <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px dashed var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:.72rem; color:var(--text-muted);">Sumber: <b style="color:var(--text-main);">webapi.bps.go.id</b></span>
+      <span id="bps-last-update" style="font-size:.7rem; color:var(--text-muted); font-style:italic;"></span>
     </div>
   </div>
 
@@ -557,26 +575,51 @@ function previewStok(sel, prevId, valId) {
 }
 
 <?php if (isSuperAdmin()): ?>
-// ── BPS API Integration (Professional Edition) ──────────────
+// ── BPS API Integration (Advanced Dashboard Edition) ──────────────
 const BPS_KEY = 'b928ea9a43f487ccb994b6bf2f308278';
-const BPS_URL = `https://webapi.bps.go.id/v1/api/list/model/statictable/domain/0000/lang/ind/key/${BPS_KEY}`;
 
-const bpsLabels = {
-  'sarkes': 'Data Fasilitas Kesehatan'
+// Daftar Indikator yang relevan
+const BPS_CONFIG = {
+  obat: {
+    name: 'Ketersediaan Obat & Vaksin (Puskesmas)',
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/1478/key/${BPS_KEY}`,
+    icon: 'bi-capsule',
+    color: 'var(--ok)'
+  },
+  sarkes: {
+    name: 'Fasilitas Kesehatan (RS & Puskesmas)',
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/232/key/${BPS_KEY}`,
+    icon: 'bi-hospital',
+    color: 'var(--primary)'
+  },
+  populasi: {
+    name: 'Demografi Penduduk (Kelompok Umur)',
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2135/key/${BPS_KEY}`,
+    icon: 'bi-people',
+    color: 'var(--info)'
+  }
 };
 
-async function loadBPS(type = 'sarkes') {
+function changeBPSCategory() {
+  loadBPS();
+}
+
+async function loadBPS() {
+  const type    = document.getElementById('bps-category')?.value || 'obat';
   const loading = document.getElementById('bps-loading');
   const errEl   = document.getElementById('bps-error');
-  const tableEl = document.getElementById('bps-table');
+  const content = document.getElementById('bps-content');
+  const updateEl = document.getElementById('bps-last-update');
+  const config  = BPS_CONFIG[type];
 
-  if (!loading) return;
+  if (!loading || !config) return;
+  
   loading.style.display = 'block';
   errEl.style.display   = 'none';
-  tableEl.innerHTML     = '';
+  content.innerHTML     = '';
 
   try {
-    const res  = await fetch('server/bps_proxy.php?url=' + encodeURIComponent(BPS_URL));
+    const res  = await fetch('server/bps_proxy.php?url=' + encodeURIComponent(config.url));
     const json = await res.json();
 
     loading.style.display = 'none';
@@ -585,40 +628,65 @@ async function loadBPS(type = 'sarkes') {
       throw new Error(json?.message || 'Gagal sinkronisasi dengan server BPS.');
     }
 
-    // TiDB / BPS API Structure handling
-    const rows = (json.data && json.data[1]) ? json.data[1] : (Array.isArray(json.data) ? json.data : []);
+    // Parsing struktur data dinamis BPS
+    const variables = json.var || [];
+    const vervar    = json.vervar || []; 
+    const turvar    = json.turvar || []; 
+    const data      = json.data || {};
 
-    if (!rows || rows.length === 0) {
-      tableEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.84rem;">Informasi belum tersedia saat ini.</div>';
+    if (!variables.length || !vervar.length) {
+      content.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.84rem;">Informasi data indikator ini belum tersedia di API BPS saat ini.</div>';
       return;
     }
 
-    // Bangun tabel HTML dari data BPS
-    const keys = Object.keys(rows[0]).slice(0, 5); // ambil max 5 kolom
-    let html = `<p style="font-size:.72rem;color:var(--text-muted);margin-bottom:.5rem;">${bpsLabels[type] || 'Data Statistik'} — ${rows.length} entri</p>`;
-    html += '<table class="table"><thead><tr>';
-    keys.forEach(k => { html += `<th>${k}</th>`; });
-    html += '</tr></thead><tbody>';
-    rows.slice(0, 10).forEach(r => { // tampilkan max 10 baris
-      html += '<tr>';
-      keys.forEach(k => { html += `<td style="font-size:.78rem;">${r[k] ?? '—'}</td>`; });
+    let html = `
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background:var(--primary-light); padding:1rem; border-radius:12px; border-left:4px solid ${config.color};">
+          <div style="font-size:.7rem; color:var(--text-sub); text-transform:uppercase; font-weight:700; margin-bottom:4px;">Indikator Terpilih</div>
+          <div style="font-size:.9rem; font-weight:800; color:var(--text-main); line-height:1.2;">${config.name}</div>
+        </div>
+      </div>
+      
+      <div class="overflow-x">
+        <table class="table" style="font-size:.78rem;">
+          <thead>
+            <tr>
+              <th style="background:var(--bg-sub); position:sticky; left:0; z-index:1;">Wilayah / Dimensi</th>
+              ${turvar.slice(0, 3).map(t => `<th>${t.label}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    vervar.slice(0, 11).forEach(v => {
+      html += `<tr>
+        <td style="font-weight:600; background:white; position:sticky; left:0; z-index:1; border-right:1px solid var(--border);">${v.label}</td>
+      `;
+      turvar.slice(0, 3).forEach(t => {
+        const valKey = Object.keys(data).find(k => k.includes(v.val) && k.includes(t.val)) || '';
+        const val = data[valKey] || '—';
+        html += `<td class="mono" style="color:var(--text-main); font-weight:500;">${val}</td>`;
+      });
       html += '</tr>';
     });
-    html += '</tbody></table>';
-    if (rows.length > 10) {
-      html += `<p style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.5rem;">Menampilkan 10 dari ${rows.length} data.</p>`;
+
+    html += '</tbody></table></div>';
+    content.innerHTML = html;
+    
+    if (updateEl) {
+      updateEl.textContent = 'Terakhir diperbarui: ' + new Date().toLocaleTimeString('id-ID');
     }
-    tableEl.innerHTML = html;
 
   } catch (e) {
     loading.style.display = 'none';
     errEl.style.display   = 'block';
-    errEl.textContent     = '⚠️ Gagal ambil data BPS: ' + e.message;
+    errEl.textContent     = '⚠️ Masalah Koneksi BPS: ' + e.message;
+    console.error('BPS Error:', e);
   }
 }
 
 // Auto-load saat halaman pertama kali dibuka
-document.addEventListener('DOMContentLoaded', () => loadBPS('sarkes'));
+document.addEventListener('DOMContentLoaded', () => loadBPS());
 <?php endif; ?>
 </script>
 
