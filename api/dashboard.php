@@ -222,7 +222,7 @@ if (isSuperAdmin()): ?>
             </span>
           </td>
           <td style="font-size:.75rem;color:var(--text-muted);">
-            <?= date('d/m/Y', strtotime($u['created_at'])) ?>
+            <?= $u['created_at'] ? date('d/m/Y', strtotime($u['created_at'])) : '—' ?>
           </td>
         </tr>
         <?php endwhile; ?>
@@ -370,7 +370,7 @@ elseif (isAdminStaff()): ?>
                   padding:.5rem 0;border-bottom:1px solid var(--border);">
         <div>
           <div style="font-size:.82rem;font-weight:700;"><?= htmlspecialchars($o['nama']) ?></div>
-          <div style="font-size:.7rem;color:var(--text-muted);"><?= date('d/m/Y',strtotime($o['exp_date'])) ?></div>
+          <div style="font-size:.7rem;color:var(--text-muted);"><?= $o['exp_date'] ? date('d/m/Y',strtotime($o['exp_date'])) : '—' ?></div>
         </div>
         <span class="mono" style="font-size:.78rem;font-weight:700;color:<?= $col ?>;">
           <?= $h<0 ? abs($h).'h lalu' : $h.'h lagi' ?>
@@ -395,7 +395,7 @@ elseif (isAdminStaff()): ?>
       <div class="log-item">
         <div>
           <div style="font-size:.84rem;font-weight:700;"><?= htmlspecialchars($l['nm']) ?></div>
-          <div style="font-size:.72rem;color:var(--text-muted);"><?= htmlspecialchars($l['nu']) ?> · <?= date('d/m H:i',strtotime($l['created_at'])) ?></div>
+          <div style="font-size:.72rem;color:var(--text-muted);"><?= htmlspecialchars($l['nu']) ?> · <?= $l['created_at'] ? date('d/m H:i',strtotime($l['created_at'])) : '—' ?></div>
         </div>
         <span class="badge <?= $m?'badge-ok':'badge-danger' ?>"><?= $m?'+':'-' ?><?= $l['jumlah'] ?> <?= $l['satuan'] ?></span>
       </div>
@@ -540,7 +540,7 @@ else: ?>
         <div>
           <div style="font-size:.84rem;font-weight:700;"><?= htmlspecialchars($l['nm']) ?></div>
           <div style="font-size:.72rem;color:var(--text-muted);">
-            <?= htmlspecialchars($l['keterangan']?:'—') ?> · <?= date('d/m H:i',strtotime($l['created_at'])) ?>
+            <?= htmlspecialchars($l['keterangan']?:'—') ?> · <?= $l['created_at'] ? date('d/m H:i',strtotime($l['created_at'])) : '—' ?>
           </div>
         </div>
         <span class="badge <?= $m?'badge-ok':'badge-danger' ?>"><?= $m?'+':'-' ?><?= $l['jumlah'] ?> <?= $l['satuan'] ?></span>
@@ -582,19 +582,20 @@ const BPS_KEY = 'b928ea9a43f487ccb994b6bf2f308278';
 const BPS_CONFIG = {
   obat: {
     name: 'Ketersediaan Obat & Vaksin (Puskesmas)',
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/1478/key/${BPS_KEY}`,
+    // Menambahkan /th/ untuk data tahun tertentu (misal 2022/2023)
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/1478/th/2022/key/${BPS_KEY}`,
     icon: 'bi-capsule',
     color: 'var(--ok)'
   },
   sarkes: {
     name: 'Fasilitas Kesehatan (RS & Puskesmas)',
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/232/key/${BPS_KEY}`,
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/232/th/2022/key/${BPS_KEY}`,
     icon: 'bi-hospital',
     color: 'var(--primary)'
   },
   populasi: {
     name: 'Demografi Penduduk (Kelompok Umur)',
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2135/key/${BPS_KEY}`,
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2135/th/2020/key/${BPS_KEY}`,
     icon: 'bi-people',
     color: 'var(--info)'
   }
