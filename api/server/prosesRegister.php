@@ -55,7 +55,7 @@ $rowId = mysqli_fetch_assoc($resId);
 $nextId = (int)($rowId['max_id'] ?? 0) + 1;
 
 $stmt = mysqli_prepare($koneksi,
-    "INSERT INTO users (id, nama, username, password, role, divisi) VALUES (?, ?, ?, ?, ?, ?)"
+    "INSERT INTO users (id, nama, username, password, role, divisi, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)"
 );
 mysqli_stmt_bind_param($stmt, 'isssss', $nextId, $nama, $username, $hash, $role, $divisi);
 

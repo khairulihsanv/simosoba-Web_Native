@@ -23,7 +23,7 @@ if ($aksi === 'tambah') {
     $rowId = mysqli_fetch_assoc($resId);
     $nextId = (int)($rowId['max_id'] ?? 0) + 1;
 
-    $s=mysqli_prepare($koneksi,"INSERT INTO users(id,nama,username,password,role,divisi) VALUES(?,?,?,?,?,?)");
+    $s=mysqli_prepare($koneksi,"INSERT INTO users(id,nama,username,password,role,divisi,is_active) VALUES(?,?,?,?,?,?,1)");
     mysqli_stmt_bind_param($s,'isssss',$nextId,$nama,$uname,$hash,$role,$divisi);
     mysqli_stmt_execute($s) ? redirUser('success','added') : redirUser('error','duplicate');
 }
