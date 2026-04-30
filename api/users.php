@@ -7,9 +7,6 @@ $notif=isset($_GET['success'])?($msgs[$_GET['success']]??null):(isset($_GET['err
 $users=mysqli_query($koneksi,"SELECT * FROM users ORDER BY role ASC, nama ASC");
 $editUser=null;
 if(!empty($_GET['edit'])){$eid=intval($_GET['edit']);$editUser=mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT * FROM users WHERE id=$eid LIMIT 1"));}
-$divisiArr=[];
-$dRes=mysqli_query($koneksi,"SELECT DISTINCT divisi FROM users WHERE divisi IS NOT NULL ORDER BY divisi ASC");
-while($d=mysqli_fetch_assoc($dRes)) $divisiArr[]=$d['divisi'];
 $rlColors=['super_admin'=>'badge-danger','admin_staff'=>'badge-info','staff'=>'badge-lime','user'=>'badge-gray'];
 $expNotif=[];
 $pageTitle='Kelola User'; $pageSubtitle='Super Admin Only';
@@ -51,7 +48,7 @@ $pageTitle='Kelola User'; $pageSubtitle='Super Admin Only';
     </div>
     <div style="margin-bottom:.75rem;">
       <label class="form-label">Role <span class="req">*</span></label>
-      <select name="role" id="sel-role" class="form-ctrl" required onchange="toggleDiv(this.value)">
+      <select name="role" id="sel-role" class="form-ctrl" required>
         <option value="">-- Pilih Role --</option>
         <!-- 4 role tersedia: super_admin, admin_staff, staff, user -->
         <option value="super_admin"  <?= ($editUser['role']??'')==='super_admin' ?'selected':'' ?>>⚡ Super Admin</option>
@@ -59,13 +56,6 @@ $pageTitle='Kelola User'; $pageSubtitle='Super Admin Only';
         <option value="staff"        <?= ($editUser['role']??'')==='staff'       ?'selected':'' ?>>💊 Staff</option>
         <option value="user"         <?= ($editUser['role']??'')==='user'        ?'selected':'' ?>>👤 User</option>
       </select>
-    </div>
-    <div id="div-wrap" style="margin-bottom:.75rem;display:<?= in_array($editUser['role']??'',['admin_staff','staff','user'])||!$editUser?'block':'none' ?>;">
-      <label class="form-label">Divisi</label>
-      <input type="text" name="divisi" class="form-ctrl" placeholder="Apotek A" list="div-list" value="<?= htmlspecialchars($editUser['divisi']??'') ?>"/>
-      <datalist id="div-list">
-        <?php foreach($divisiArr as $d): ?><option value="<?= htmlspecialchars($d) ?>"><?php endforeach; ?>
-      </datalist>
     </div>
     <?php if($editUser): ?>
     <div style="margin-bottom:.875rem;">
@@ -101,7 +91,7 @@ $pageTitle='Kelola User'; $pageSubtitle='Super Admin Only';
   <div class="card-title" style="margin-bottom:.875rem;">👥 Daftar Pengguna</div>
   <div class="overflow-x">
     <table class="table">
-      <thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Divisi</th><th>Status</th><th>Aksi</th></tr></thead>
+      <thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead>
       <tbody>
       <?php while($u=mysqli_fetch_assoc($users)):
         $ini=strtoupper(implode('',array_map(fn($w)=>$w[0],array_slice(explode(' ',$u['nama']),0,2)))); ?>
@@ -114,7 +104,6 @@ $pageTitle='Kelola User'; $pageSubtitle='Super Admin Only';
         </td>
         <td class="mono" style="font-size:.8rem;color:var(--text-sub);">@<?= htmlspecialchars($u['username']) ?></td>
         <td><span class="badge <?= $rlColors[$u['role']]??'badge-gray' ?>"><?= roleLabel($u['role']) ?></span></td>
-        <td style="font-size:.8rem;color:var(--text-sub);"><?= htmlspecialchars($u['divisi']??'—') ?></td>
         <td><span class="badge <?= $u['is_active']?'badge-ok':'badge-gray' ?>"><?= $u['is_active']?'Aktif':'Nonaktif' ?></span></td>
         <td>
           <div style="display:flex;gap:.375rem;">
@@ -137,8 +126,4 @@ $pageTitle='Kelola User'; $pageSubtitle='Super Admin Only';
 </div></div>
 <?php include 'includes/bottom_nav.php'; ?>
 <?php include 'includes/scripts.php'; ?>
-<script>
-function toggleDiv(role){ document.getElementById('div-wrap').style.display=role==='super_admin'?'none':'block'; }
-toggleDiv(document.getElementById('sel-role').value);
-</script>
 </body></html>
