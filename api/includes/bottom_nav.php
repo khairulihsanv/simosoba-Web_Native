@@ -49,9 +49,10 @@ if (isSuperAdmin()) {
         ['expired.php',   '⏰', 'Exp.',   $badgeExp ?: ''],
     ];
 } else {
-    // User biasa: hanya bisa lihat
+    // User biasa: sekarang bisa lihat stok juga untuk kemudahan input
     $menus = [
         ['dashboard.php', '🏠', 'Home',   ''],
+        ['stok.php',      '💊', 'Stok',   ''],
         ['expired.php',   '⏰', 'Exp.',   $badgeExp ?: ''],
     ];
 }

@@ -251,8 +251,8 @@ if (isSuperAdmin()): ?>
       
       <div style="display:flex; gap:8px;">
         <select id="bps-category" class="form-ctrl" style="font-size:.75rem; padding:.35rem .75rem; width:auto; height:32px;" onchange="changeBPSCategory()">
-          <option value="obat">💊 Ketersediaan Obat</option>
-          <option value="sarkes">🏥 Fasilitas Kesehatan</option>
+          <option value="apotek_jaktim">💊 Apotek (Jak-Tim)</option>
+          <option value="apotek_jakut">💊 Apotek (Jak-Ut)</option>
           <option value="populasi">👥 Demografi Penduduk</option>
         </select>
         <button onclick="loadBPS()" class="btn-primary" style="padding:.35rem .75rem; font-size:.75rem; height:32px; background:var(--primary-light); color:var(--primary-dark); border:none; box-shadow:none;">
@@ -426,7 +426,7 @@ else: ?>
   </div>
 
   <!-- FORM INPUT & OUTPUT dalam satu card grid -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
+  <div class="responsive-grid" style="margin-bottom:1.25rem;">
 
     <!-- ── INPUT STOK (Tambah stok yang sudah ada / update) -->
     <!-- Staff hanya bisa output; input penambahan obat baru via stok.php -->
@@ -580,23 +580,22 @@ const BPS_KEY = 'b928ea9a43f487ccb994b6bf2f308278';
 
 // Daftar Indikator yang relevan
 const BPS_CONFIG = {
-  obat: {
-    name: 'Ketersediaan Obat & Vaksin (Puskesmas)',
-    // Tahun 2017 adalah tahun terakhir yang tersedia untuk indikator 1478
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/1478/th/2017/key/${BPS_KEY}`,
+  apotek_jaktim: {
+    name: 'Jumlah Apotek (Jakarta Timur)',
+    // Menggunakan domain 3175 (Jakarta Timur), Var 679 (Apotek)
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/3175/var/679/th/120/key/${BPS_KEY}`,
     icon: 'bi-capsule',
     color: 'var(--ok)'
   },
-  sarkes: {
-    name: 'Fasilitas Kesehatan (RS & Puskesmas)',
-    // Tahun 2015 adalah tahun terakhir yang tersedia untuk indikator 232
-    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/232/th/2015/key/${BPS_KEY}`,
-    icon: 'bi-hospital',
+  apotek_jakut: {
+    name: 'Jumlah Apotek (Jakarta Utara)',
+    // Menggunakan domain 3172 (Jakarta Utara), Var 679 (Apotek)
+    url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/3172/var/679/th/120/key/${BPS_KEY}`,
+    icon: 'bi-capsule',
     color: 'var(--primary)'
   },
   populasi: {
     name: 'Demografi Penduduk (Kelompok Umur)',
-    // Proyeksi tahun 2023 tersedia untuk indikator 2135
     url: `https://webapi.bps.go.id/v1/api/list/model/data/domain/0000/var/2135/th/2023/key/${BPS_KEY}`,
     icon: 'bi-people',
     color: 'var(--info)'

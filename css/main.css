@@ -497,6 +497,18 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: .75rem;
 }
+
+/* Grid responsif untuk form atau konten lainnya */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .responsive-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 480px) {
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .bottom-nav { bottom: .5rem; border-radius: 20px; }
