@@ -16,7 +16,7 @@ $nama     = trim($_POST['nama']      ?? '');
 $username = trim($_POST['username']  ?? '');
 $password = trim($_POST['password']  ?? '');
 $konfirm  = trim($_POST['konfirmasi']?? '');
-$divisi   = trim($_POST['divisi']    ?? '');
+$divisi   = 'Gudang Utama';
 
 // Validasi semua field diisi
 if (!$nama || !$username || !$password || !$konfirm) {

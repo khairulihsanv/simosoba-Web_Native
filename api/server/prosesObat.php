@@ -22,7 +22,7 @@ if ($aksi === 'tambah') {
     $stok     = intval($_POST['stok']   ?? 0);
     $stok_min = intval($_POST['stok_min'] ?? 10);
     $exp_date = trim($_POST['exp_date'] ?? '');
-    $divisi   = isSuperAdmin() ? trim($_POST['divisi'] ?? '') : ($_SESSION['divisi'] ?? '');
+    $divisi   = 'Gudang Utama';
 
     if (!$nama || !$kategori || !$exp_date) { redirStok('error','invalid'); }
 

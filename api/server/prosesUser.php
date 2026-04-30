@@ -15,7 +15,7 @@ function redirUser($t,$k){ header("Location: ../users.php?$t=$k"); exit(); }
 if ($aksi === 'tambah') {
     $nama=$_POST['nama']??''; $uname=$_POST['username']??'';
     $pass=$_POST['password']??''; $role=$_POST['role']??'user';
-    $divisi=$role==='super_admin'?null:($_POST['divisi']??'');
+    $divisi = 'Gudang Utama';
     if(!$nama||!$uname||!$pass){ redirUser('error','invalid'); }
     $hash = password_hash($pass, PASSWORD_DEFAULT);
     // --- LOGIKA MANUAL ID ---
@@ -30,7 +30,7 @@ if ($aksi === 'tambah') {
 
 if ($aksi === 'edit') {
     $id=intval($_POST['id']??0); $nama=$_POST['nama']??'';
-    $role=$_POST['role']??''; $divisi=$role==='super_admin'?null:($_POST['divisi']??'');
+    $role=$_POST['role']??'';    $divisi = 'Gudang Utama';
     $pass=$_POST['password']??''; $aktif=intval($_POST['is_active']??1);
     if(!$id||!$nama||!$role){ redirUser('error','invalid'); }
     if($pass){

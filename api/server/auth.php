@@ -56,15 +56,8 @@ function canLihatLaporan() { return in_array($_SESSION['role'] ?? '', ['super_ad
 // lainnya     → hanya divisi sendiri
 // $alias: alias tabel di SQL, contoh 'o' untuk 'o.divisi'
 function getDivisiFilter($alias = '') {
-    if (isSuperAdmin()) return "1=1";
-    $divisi = trim($_SESSION['divisi'] ?? '');
-    // Jika divisi di session adalah '-' atau kosong, kita coba ambil data tanpa filter divisi 
-    // agar data tidak 0, tapi idealnya admin harus punya divisi yang valid.
-    if ($divisi === '' || $divisi === '-') return "1=1"; 
-    
-    $divisi = mysqli_real_escape_string($GLOBALS['koneksi'], $divisi);
-    $col    = $alias ? "$alias.divisi" : "divisi";
-    return "(LOWER(TRIM($col)) = LOWER('$divisi'))";
+    // Sistem satu gudang: semua user melihat semua data
+    return "1=1";
 }
 
 // ── Ambil data session user aktif ─────────────────────────
@@ -73,7 +66,7 @@ function me() {
         'id'     => $_SESSION['user_id'] ?? 0,
         'nama'   => $_SESSION['nama']    ?? 'User',
         'role'   => $_SESSION['role']    ?? '',
-        'divisi' => $_SESSION['divisi']  ?? '-',
+        'divisi' => 'Gudang Utama', // Statis untuk menyederhanakan sistem
     ];
 }
 

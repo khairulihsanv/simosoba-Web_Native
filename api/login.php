@@ -370,14 +370,6 @@ $sucKey = $_GET['success'] ?? '';
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Divisi / Apotek</label>
-        <div class="input-wrap">
-          <i class="bi bi-building ico"></i>
-          <input type="text" name="divisi" class="form-ctrl"
-                 placeholder="Contoh: Apotek A"/>
-        </div>
-      </div>
 
       <div class="form-group">
         <label class="form-label">Password <span style="color:rgba(255,255,255,.5);font-weight:400;">(min. 6 karakter)</span></label>
@@ -400,11 +392,7 @@ $sucKey = $_GET['success'] ?? '';
         </div>
       </div>
 
-      <!-- Info: role default setelah register -->
-      <div style="font-size:.71rem;color:rgba(255,255,255,.55);margin-bottom:.875rem;line-height:1.5;">
-        ℹ️ Akun baru mendapat akses <strong style="color:rgba(255,255,255,.8);">User</strong>.
-        Super Admin dapat mengubah role setelah registrasi.
-      </div>
+      
 
       <button type="submit" class="btn-submit">
         <i class="bi bi-person-plus-fill"></i> Buat Akun
