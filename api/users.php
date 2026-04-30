@@ -79,7 +79,7 @@ $pageTitle='Kelola User'; $pageSubtitle='Super Admin Only';
     <div style="font-size:.72rem;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.625rem;">Keterangan Role</div>
     <div style="font-size:.75rem;color:var(--text-sub);line-height:1.9;">
       <div>⚡ <strong>Super Admin</strong> — kelola semua user & data</div>
-      <div>🏥 <strong>Admin Staff</strong> — laporan + kadaluarsa divisi</div>
+      <div>🏥 <strong>Admin Staff</strong> — laporan + kadaluarsa</div>
       <div>💊 <strong>Staff</strong> — input/output stok saja</div>
       <div>👤 <strong>User</strong> — read-only dashboard</div>
     </div>

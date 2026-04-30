@@ -155,7 +155,7 @@ if (isSuperAdmin()): ?>
     <div class="stat-card" data-color="info">
       <div class="stat-icon">🏥</div>
       <div class="stat-value" style="color:var(--info);"><?= $totalDivisi ?></div>
-      <div class="stat-label">Divisi</div>
+      <div class="stat-label">Gudang</div>
     </div>
   </div>
 

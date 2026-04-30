@@ -22,7 +22,6 @@ if ($fStatus==='Habis')   $where .= " AND stok=0";
 
 $allObat  = mysqli_query($koneksi,"SELECT * FROM obat $where ORDER BY nama ASC");
 $selObat  = mysqli_query($koneksi,"SELECT id,nama,stok,satuan FROM obat WHERE $fDiv ORDER BY nama ASC");
-$divisiList = mysqli_query($koneksi,"SELECT DISTINCT divisi FROM users WHERE divisi IS NOT NULL ORDER BY divisi ASC");
 
 $expNotif = [];
 $eR = mysqli_query($koneksi,"SELECT *,DATEDIFF(exp_date,CURDATE()) AS sisa_hari FROM obat WHERE exp_date<=DATE_ADD(CURDATE(),INTERVAL 30 DAY) AND $fDiv ORDER BY exp_date ASC LIMIT 5");
@@ -90,15 +89,6 @@ $pageTitle='Stok Obat'; $pageSubtitle='Input & Output';
       <label class="form-label">Tanggal Kadaluarsa <span class="req">*</span></label>
       <input type="date" name="exp_date" class="form-ctrl" required min="<?= date('Y-m-d') ?>"/>
     </div>
-    <?php if (isSuperAdmin()): ?>
-    <div style="margin-bottom:.75rem;">
-      <label class="form-label">Divisi</label>
-      <input type="text" name="divisi" class="form-ctrl" placeholder="Apotek A" list="div-list"/>
-      <datalist id="div-list">
-        <?php while($d=mysqli_fetch_assoc($divisiList)): ?><option value="<?= htmlspecialchars($d['divisi']) ?>"><?php endwhile; ?>
-      </datalist>
-    </div>
-    <?php endif; ?>
     <button type="submit" class="btn-primary btn-full">➕ Simpan Obat</button>
   </form>
 </div>
