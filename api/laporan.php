@@ -4,7 +4,7 @@ require_once 'server/session_handler.php'; session_start(); include 'server/kone
 requireRole(['super_admin','admin_staff']);
 $user=me(); $fDiv=getDivisiFilter();
 $bulan=$_GET['bulan']??date('Y-m'); $dari=$bulan.'-01'; $sampai=date('Y-m-t',strtotime($dari));
-$fDivLog=isSuperAdmin()?'1=1':"o.divisi='".mysqli_real_escape_string($koneksi,$user['divisi'])."'";
+$fDivLog=getDivisiFilter('o');
 $tKeluar=(int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COALESCE(SUM(t.jumlah),0) n FROM transaksi t JOIN obat o ON t.obat_id=o.id WHERE t.tipe='keluar' AND $fDivLog AND t.created_at>='$dari' AND t.created_at<='$sampai 23:59:59'"))['n'];
 $tMasuk=(int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COALESCE(SUM(t.jumlah),0) n FROM transaksi t JOIN obat o ON t.obat_id=o.id WHERE t.tipe='masuk' AND $fDivLog AND t.created_at>='$dari' AND t.created_at<='$sampai 23:59:59'"))['n'];
 $tObat=(int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE $fDiv"))['n'];

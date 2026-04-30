@@ -49,7 +49,7 @@ if (isAdminStaff()) {
     $habis   = (int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE stok=0 AND $fDiv"))['n'];
     $exp30   = (int)mysqli_fetch_assoc(mysqli_query($koneksi,
         "SELECT COUNT(*) n FROM obat WHERE exp_date<=DATE_ADD(CURDATE(),INTERVAL 30 DAY) AND $fDiv"))['n'];
-    $fDivLog = "o.divisi='" . mysqli_real_escape_string($koneksi, $user['divisi']) . "'";
+    $fDivLog = getDivisiFilter('o');
     // Total keluar bulan ini
     $tKeluar = (int)mysqli_fetch_assoc(mysqli_query($koneksi,
         "SELECT COALESCE(SUM(t.jumlah),0) n FROM transaksi t JOIN obat o ON t.obat_id=o.id
