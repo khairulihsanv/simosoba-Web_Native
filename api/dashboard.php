@@ -10,7 +10,7 @@ session_start();
 include 'server/koneksi.php';
 include 'server/auth.php';
 requireLogin();
-
+/** @var mysqli $koneksi */ //
 $user = me();
 $fDiv = getDivisiFilter();
 

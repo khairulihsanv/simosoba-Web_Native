@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $koneksi */ //
 require_once 'server/session_handler.php'; session_start(); include 'server/koneksi.php'; include 'server/auth.php';
 requireRole('super_admin');
 $msgs=['added'=>['ok','✅ User ditambahkan!'],'updated'=>['ok','✅ User diperbarui!'],'deleted'=>['ok','✅ User dihapus!'],

@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $koneksi */ //
 // stok.php — Input / Output Stok Obat
 require_once 'server/session_handler.php';
 session_start();

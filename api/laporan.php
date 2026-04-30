@@ -1,4 +1,5 @@
 <?php
+/** @var mysqli $koneksi */ //
 // laporan.php — Hanya admin_staff & super_admin
 require_once 'server/session_handler.php'; session_start(); include 'server/koneksi.php'; include 'server/auth.php';
 requireRole(['super_admin','admin_staff']);
