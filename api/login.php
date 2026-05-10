@@ -80,7 +80,7 @@ $sucKey = $_GET['success'] ?? '';
                     </div>
                 <?php endif; ?>
 
-                <form action="actions/login_process.php" method="POST" class="space-y-5">
+                <form action="index.php?page=login_process" method="POST" class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold text-navy mb-2">Username</label>
                         <div class="relative group">
