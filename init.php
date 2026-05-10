@@ -8,6 +8,14 @@ if (!defined('BASE_PATH')) {
     define('BASE_PATH', __DIR__);
 }
 
+// 1.1 Base URL Detection (Vercel vs Localhost)
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+$host = $_SERVER['HTTP_HOST'];
+// Deteksi jika di localhost dengan subfolder
+$uri = $_SERVER['REQUEST_URI'];
+$base_dir = (strpos($host, 'localhost') !== false) ? '/simosoba2' : '';
+define('BASE_URL', $protocol . $host . $base_dir);
+
 // 2. Session Start (Vercel Fix)
 if (session_status() === PHP_SESSION_NONE) {
     if (PHP_SAPI !== 'cli') {

@@ -62,7 +62,7 @@ if ($page === 'landing') {
                     <p class="text-lg text-slate-600 mb-10 leading-relaxed">Optimalkan ketersediaan obat Anda dengan sistem monitoring cerdas yang memprediksi kebutuhan stok secara real-time.</p>
                     <a href="index.php?page=login" class="px-8 py-4 bg-emerald text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 w-max">Mulai Kelola Sekarang <i class="bi bi-arrow-right"></i></a>
                 </div>
-                <div class="flex justify-center"><img src="api/assets/medical_illustration_minimalist_1778422468140.png" class="w-full max-w-lg drop-shadow-2xl"></div>
+                <div class="flex justify-center"><img src="<?= BASE_URL ?>/api/assets/medical_illustration_minimalist_1778422468140.png" class="w-full max-w-lg drop-shadow-2xl"></div>
             </div>
         </section>
 
