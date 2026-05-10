@@ -1,81 +1,71 @@
 <?php
-// views/landing.php
-if (!defined('BASE_PATH')) die('Access Denied');
+/**
+ * views/landing.php - Landing Page Content
+ */
 ?>
-<!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiMoSoBa — Manajemen Stok Obat Cerdas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { navy: '#1e293b', emerald: '#10b981', softgrey: '#f8fafc' },
-                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Poppins', 'sans-serif'] }
-                }
-            }
-        }
-    </script>
-    <style>
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .hero-gradient { background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.1), transparent), radial-gradient(circle at bottom left, rgba(30, 41, 59, 0.05), transparent); }
-    </style>
-</head>
-<body class="bg-softgrey text-navy font-sans antialiased">
-    <nav class="fixed top-0 w-full z-50 glass border-b border-slate-200 h-20 flex items-center">
-        <div class="max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-emerald rounded-xl flex items-center justify-center text-white shadow-lg"><i class="bi bi-capsule-pill"></i></div>
-                <span class="font-display font-bold text-2xl">SiMo<span class="text-emerald">SoBa</span></span>
+<!-- Navbar -->
+<nav class="fixed top-0 left-0 w-full z-50 glass border-b border-white/20">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald rounded-xl flex items-center justify-center text-white shadow-lg">
+                <i class="bi bi-capsule-pill text-xl"></i>
             </div>
-            <div class="flex items-center gap-8">
-                <a href="#features" class="hover:text-emerald font-medium">Keunggulan</a>
-                <a href="index.php?page=login" class="px-6 py-2.5 bg-navy text-white rounded-full font-bold shadow-lg">Masuk</a>
-            </div>
+            <span class="font-display font-bold text-2xl text-navy">SiMo<span class="text-emerald">SoBa</span></span>
         </div>
-    </nav>
+        <div class="flex items-center gap-8">
+            <a href="#fitur" class="text-sm font-bold text-slate-600 hover:text-emerald transition-colors">Fitur</a>
+            <a href="index.php?page=login" class="px-6 py-2.5 bg-navy text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all">Masuk</a>
+        </div>
+    </div>
+</nav>
 
-    <section class="pt-32 pb-20 px-6 hero-gradient">
-        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-                <h1 class="font-display font-bold text-6xl leading-tight mb-6">Manajemen Stok <span class="text-emerald">Cerdas</span> & Akurat.</h1>
-                <p class="text-lg text-slate-600 mb-10 leading-relaxed">Optimalkan ketersediaan obat Anda dengan sistem monitoring cerdas yang memprediksi kebutuhan stok secara real-time.</p>
-                <a href="index.php?page=login" class="px-8 py-4 bg-emerald text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 w-max">Mulai Kelola Sekarang <i class="bi bi-arrow-right"></i></a>
+<!-- Hero Section -->
+<section class="pt-40 pb-20 px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+        <div>
+            <span class="inline-block px-4 py-1.5 bg-emerald/10 text-emerald text-xs font-bold rounded-full mb-6 uppercase tracking-widest">Apotek Management 2.0</span>
+            <h1 class="text-5xl lg:text-7xl font-display font-bold text-navy leading-[1.1] mb-8">
+                Monitoring Stok <br><span class="text-emerald">Lebih Cerdas.</span>
+            </h1>
+            <p class="text-lg text-slate-600 mb-10 leading-relaxed max-w-lg">
+                Optimalkan ketersediaan obat Anda dengan sistem monitoring cerdas yang memprediksi kebutuhan stok secara real-time.
+            </p>
+            <div class="flex flex-wrap gap-4">
+                <a href="index.php?page=login" class="px-8 py-4 bg-emerald text-white font-bold rounded-2xl shadow-xl shadow-emerald/20 hover:scale-105 transition-all flex items-center gap-3">
+                    Mulai Sekarang <i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="#fitur" class="px-8 py-4 bg-white text-navy font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">
+                    Lihat Fitur
+                </a>
             </div>
-            <div class="flex justify-center"><img src="medical_illustration_minimalist_1778422468140.png" class="w-full max-w-lg drop-shadow-2xl"></div>
         </div>
-    </section>
+        <div class="relative">
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-emerald/10 blur-3xl rounded-full"></div>
+            <div class="bg-white p-4 rounded-[40px] shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700">
+                <img src="/api/assets/medical_illustration_minimalist_1778422468140.png" class="w-full rounded-[32px]">
+            </div>
+        </div>
+    </div>
+</section>
 
-    <section id="features" class="py-24 px-6 bg-white">
-        <div class="max-w-7xl mx-auto text-center mb-16">
-            <h2 class="font-display font-bold text-4xl mb-4">3 Pilar Utama SiMoSoBa</h2>
+<!-- Stats Bar -->
+<div class="bg-navy py-12">
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="text-center">
+            <h4 class="text-4xl font-bold text-white mb-2">99%</h4>
+            <p class="text-slate-400 text-sm font-medium">Akurasi Stok</p>
         </div>
-        <div class="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            <div class="p-10 rounded-[32px] bg-softgrey border border-slate-100 hover:shadow-xl transition-all">
-                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald text-3xl mb-8 shadow-sm"><i class="bi bi-lightning-charge"></i></div>
-                <h3 class="font-display font-bold text-2xl mb-4">Efisien</h3>
-                <p class="text-slate-600">Pencatatan mutasi otomatis yang memangkas waktu administratif hingga 70%.</p>
-            </div>
-            <div class="p-10 rounded-[32px] bg-softgrey border border-slate-100 hover:shadow-xl transition-all">
-                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald text-3xl mb-8 shadow-sm"><i class="bi bi-graph-up-arrow"></i></div>
-                <h3 class="font-display font-bold text-2xl mb-4">Prediktif</h3>
-                <p class="text-slate-600">Algoritma cerdas yang memprediksi sisa hari stok berdasarkan tren penggunaan.</p>
-            </div>
-            <div class="p-10 rounded-[32px] bg-softgrey border border-slate-100 hover:shadow-xl transition-all">
-                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald text-3xl mb-8 shadow-sm"><i class="bi bi-clock-history"></i></div>
-                <h3 class="font-display font-bold text-2xl mb-4">Real-time</h3>
-                <p class="text-slate-600">Pantau ketersediaan secara langsung dari perangkat manapun dengan data tersinkronisasi.</p>
-            </div>
+        <div class="text-center border-l border-white/10">
+            <h4 class="text-4xl font-bold text-white mb-2">24/7</h4>
+            <p class="text-slate-400 text-sm font-medium">Monitoring Real-time</p>
         </div>
-    </section>
-
-    <footer class="py-12 px-6 border-t border-slate-200 text-center text-slate-500 text-sm">
-        &copy; 2026 SiMoSoBa System. Hak Cipta Dilindungi.
-    </footer>
-</body>
-</html>
+        <div class="text-center border-l border-white/10">
+            <h4 class="text-4xl font-bold text-white mb-2">1k+</h4>
+            <p class="text-slate-400 text-sm font-medium">Obat Terkelola</p>
+        </div>
+        <div class="text-center border-l border-white/10">
+            <h4 class="text-4xl font-bold text-white mb-2">Fast</h4>
+            <p class="text-slate-400 text-sm font-medium">Prediksi AI</p>
+        </div>
+    </div>
+</div>
