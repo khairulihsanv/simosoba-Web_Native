@@ -33,11 +33,11 @@ $recentActivities = mysqli_query($koneksi, "
 $user = me();
 $pageTitle = 'Dashboard Analytics';
 ?>
-<?php include 'includes/header.php'; ?>
+<?php include BASE_PATH . '/includes/header.php'; ?>
 <title><?= $pageTitle ?> — SiMoSoBa</title>
 <body class="font-sans antialiased">
 
-    <?php include 'includes/sidebar.php'; ?>
+    <?php include BASE_PATH . '/includes/sidebar.php'; ?>
 
     <main class="ml-64 p-8">
         <!-- Top Bar -->
