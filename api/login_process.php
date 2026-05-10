@@ -1,35 +1,30 @@
 <?php
-// api/login_process.php
+/**
+ * api/login_process.php - Proses Verifikasi (Tanpa Output)
+ */
+ob_start(); // Buffer output untuk mencegah error headers already sent
+
 if (!defined('BASE_PATH')) {
     require_once dirname(__DIR__) . '/init.php';
 }
-
-/**
- * login_process.php - Logika Verifikasi Login (Vercel Optimized)
- */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
     if (empty($username) || empty($password)) {
-        $_SESSION['error'] = 'Semua field wajib diisi.';
         header("Location: index.php?page=login&error=empty");
         exit();
     }
 
     try {
-        /**
-         * TiDB Compatibility: PDO + Case-insensitive check
-         */
+        // Query User
         $stmt = $pdo->prepare("SELECT * FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
         $stmt->execute([$username]);
         $user = $stmt->fetch();
 
         if ($user) {
-            /**
-             * Password Verification
-             */
+            // Verifikasi Password
             $isValid = password_verify($password, $user['password']) || ($password === $user['password']);
 
             if ($isValid) {
@@ -40,27 +35,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role']     = $user['role'];
                 $_SESSION['divisi']   = $user['divisi'];
 
-                // Berhasil: Redirect ke Dashboard menggunakan rute utama
+                // Sukses: Redirect ke Dashboard
                 header("Location: index.php?page=dashboard");
                 exit();
-            } else {
-                $_SESSION['error'] = "Password salah.";
             }
-        } else {
-            $_SESSION['error'] = "User tidak ditemukan.";
         }
+        
+        // Gagal: Redirect ke Login dengan parameter error
+        header("Location: index.php?page=login&error=invalid");
+        exit();
 
     } catch (PDOException $e) {
-        $_SESSION['error'] = "Database Error: " . $e->getMessage();
-    }
-
-    // Jika gagal, tampilkan debug jika di environment pengembangan atau redirect ke login
-    if (isset($_SESSION['error'])) {
-        header("Location: index.php?page=login&error=invalid");
+        // Error DB: Tetap redirect agar tidak merusak flow, simpan pesan di log
+        error_log("Login DB Error: " . $e->getMessage());
+        header("Location: index.php?page=login&error=db");
         exit();
     }
 } else {
-    header("Location: index.php?page=login");
+    header("Location: index.php");
     exit();
 }
+
+ob_end_flush();
 ?>
