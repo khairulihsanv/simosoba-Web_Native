@@ -1,6 +1,6 @@
 <?php
 // actions/check_stock.php
-require_once '../init.php';
+require_once dirname(__DIR__) . '/init.php';
 
 $stats = $obatModel->getStats();
 header('Content-Type: application/json');

@@ -4,7 +4,7 @@
 // ============================================================
 header('Content-Type: application/json');
 require_once __DIR__ . '/server/auth.php'; // Proteksi: Wajib Login
-require_once __DIR__ . '/server/koneksi.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
 // Cek apakah user sudah login
 if (empty($_SESSION['user_id'])) {

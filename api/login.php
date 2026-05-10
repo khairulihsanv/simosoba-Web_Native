@@ -1,7 +1,7 @@
 <?php
 require_once 'server/session_handler.php';
 session_start();
-include 'server/koneksi.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
 if (!empty($_SESSION['user_id'])) { header('Location: dashboard.php'); exit(); }
 

@@ -2,8 +2,8 @@
 require_once 'server/session_handler.php';
 session_start();
 require_once 'Core/Autoloader.php';
-include 'server/koneksi.php';
-include 'server/auth.php';
+require_once dirname(__DIR__) . '/config/database.php';
+// include 'server/auth.php';
 requireLogin();
 
 use Controllers\ObatController;

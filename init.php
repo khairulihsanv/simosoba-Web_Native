@@ -3,7 +3,7 @@ define('BASE_PATH', __DIR__);
 session_start();
 
 require_once BASE_PATH . '/config/database.php';
-$db = (new Database())->getConnection();
+$db = $pdo; // Use the PDO object from database.php
 
 spl_autoload_register(fn($class) => require_once BASE_PATH . "/classes/$class.php");
 

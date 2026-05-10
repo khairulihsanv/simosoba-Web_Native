@@ -1,7 +1,9 @@
 <?php
 /** @var mysqli $koneksi */ //
 // laporan.php — Hanya admin_staff & super_admin
-require_once 'server/session_handler.php'; session_start(); include 'server/koneksi.php'; include 'server/auth.php';
+// require_once 'server/session_handler.php'; session_start(); 
+require_once dirname(__DIR__) . '/config/database.php';
+// include 'server/auth.php';
 requireRole(['super_admin','admin_staff']);
 $user=me(); $fDiv=getDivisiFilter();
 $bulan=$_GET['bulan']??date('Y-m'); $dari=$bulan.'-01'; $sampai=date('Y-m-t',strtotime($dari));
