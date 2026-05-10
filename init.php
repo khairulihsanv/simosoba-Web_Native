@@ -8,8 +8,11 @@ if (!defined('BASE_PATH')) {
     define('BASE_PATH', __DIR__);
 }
 
-// 2. Session Start
+// 2. Session Start (Vercel Fix)
 if (session_status() === PHP_SESSION_NONE) {
+    if (PHP_SAPI !== 'cli') {
+        session_save_path('/tmp');
+    }
     session_start();
 }
 
