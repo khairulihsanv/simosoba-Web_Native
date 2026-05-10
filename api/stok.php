@@ -1,9 +1,5 @@
 <?php
-require_once 'server/session_handler.php';
-session_start();
-require_once 'Core/Autoloader.php';
-require_once dirname(__DIR__) . '/config/database.php';
-// include 'server/auth.php'; // Commented out due to missing file
+require_once dirname(__DIR__) . '/init.php';
 requireLogin();
 
 /** @var mysqli $koneksi */

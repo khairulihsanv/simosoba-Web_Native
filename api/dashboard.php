@@ -1,39 +1,27 @@
 <?php
-require_once 'server/session_handler.php';
-session_start();
-require_once 'Core/Autoloader.php';
-require_once dirname(__DIR__) . '/config/database.php';
-// include 'server/auth.php';
+// api/dashboard.php
+require_once dirname(__DIR__) . '/init.php';
 requireLogin();
 
 use Controllers\ObatController;
+
 $obatCtrl = new ObatController();
+$data = $obatCtrl->getDashboardStats();
+
+// Shortcut variables untuk UI agar tidak banyak ubah template
+$summary = $data['summary'];
+$totalObat = $summary['total'];
+$stokKritis = $summary['kritis'];
+$stokHabis = $summary['habis'];
+$expired = $summary['expired'];
+
+$trends = $data['trends'];
+$chartLabels = $trends['labels'];
+$masukData = $trends['masuk'];
+$keluarData = $trends['keluar'];
+
 /** @var mysqli $koneksi */
-$user = me();
-$fDiv = getDivisiFilter();
-
-// --- DATA FETCHING (Professional Stats) ---
-$totalObat   = (int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE $fDiv"))['n'];
-$stokKritis  = (int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE stok < stok_min AND stok > 0 AND $fDiv"))['n'];
-$stokHabis   = (int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE stok = 0 AND $fDiv"))['n'];
-$expired     = (int)mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) n FROM obat WHERE exp_date <= CURDATE() AND $fDiv"))['n'];
-
-// Chart Data: Tren Keluar-Masuk (7 Hari Terakhir)
-$chartLabels = [];
-$masukData   = [];
-$keluarData  = [];
-for ($i = 6; $i >= 0; $i--) {
-    $date = date('Y-m-d', strtotime("-$i days"));
-    $chartLabels[] = date('d M', strtotime($date));
-    
-    $m = (int)mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(jumlah) n FROM transaksi t JOIN obat o ON t.obat_id=o.id WHERE t.tipe='masuk' AND DATE(t.created_at)='$date' AND $fDiv"))['n'] ?? 0;
-    $k = (int)mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(jumlah) n FROM transaksi t JOIN obat o ON t.obat_id=o.id WHERE t.tipe='keluar' AND DATE(t.created_at)='$date' AND $fDiv"))['n'] ?? 0;
-    
-    $masukData[] = $m;
-    $keluarData[] = $k;
-}
-
-// Recent Activities
+// Recent Activities tetap menggunakan query langsung untuk fleksibilitas detail
 $recentActivities = mysqli_query($koneksi, "
     SELECT t.*, o.nama as obat_nama, u.nama as user_nama 
     FROM transaksi t 
@@ -42,6 +30,7 @@ $recentActivities = mysqli_query($koneksi, "
     ORDER BY t.created_at DESC LIMIT 6
 ");
 
+$user = me();
 $pageTitle = 'Dashboard Analytics';
 ?>
 <!DOCTYPE html>
@@ -136,7 +125,7 @@ $pageTitle = 'Dashboard Analytics';
                     </div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Prediksi Kebutuhan</span>
                 </div>
-                <h3 class="text-3xl font-bold text-emerald">+12%</h3>
+                <h3 class="text-3xl font-bold text-emerald"><?= $data['prediction_trend'] ?></h3>
                 <p class="text-slate-400 text-xs mt-2">Tren bulan depan</p>
             </div>
         </div>

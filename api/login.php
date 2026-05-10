@@ -1,7 +1,5 @@
 <?php
-require_once 'server/session_handler.php';
-session_start();
-require_once dirname(__DIR__) . '/config/database.php';
+require_once dirname(__DIR__) . '/init.php';
 
 if (!empty($_SESSION['user_id'])) { header('Location: dashboard.php'); exit(); }
 

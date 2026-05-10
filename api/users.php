@@ -1,8 +1,6 @@
 <?php
 /** @var mysqli $koneksi */ //
-// require_once 'server/session_handler.php'; session_start(); 
-require_once dirname(__DIR__) . '/config/database.php';
-// include 'server/auth.php';
+require_once dirname(__DIR__) . '/init.php';
 requireRole('super_admin');
 $msgs=['added'=>['ok','✅ User ditambahkan!'],'updated'=>['ok','✅ User diperbarui!'],'deleted'=>['ok','✅ User dihapus!'],
        'invalid'=>['err','❌ Data tidak lengkap!'],'duplicate'=>['err','❌ Username sudah dipakai!'],'self'=>['err','❌ Tidak bisa hapus akun sendiri!']];
