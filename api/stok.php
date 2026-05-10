@@ -1,12 +1,12 @@
 <?php
-/** @var mysqli $koneksi */ //
-// stok.php — Input / Output Stok Obat
 require_once 'server/session_handler.php';
 session_start();
+require_once 'Core/Autoloader.php';
 include 'server/koneksi.php';
 include 'server/auth.php';
 requireLogin();
 
+/** @var mysqli $koneksi */
 $user = me(); $fDiv = getDivisiFilter();
 
 $msgs = ['added'=>['ok','✅ Obat berhasil ditambahkan!'],'deleted'=>['ok','✅ Obat dihapus!'],
@@ -24,166 +24,218 @@ if ($fStatus==='Habis')   $where .= " AND stok=0";
 $allObat  = mysqli_query($koneksi,"SELECT * FROM obat $where ORDER BY nama ASC");
 $selObat  = mysqli_query($koneksi,"SELECT id,nama,stok,satuan FROM obat WHERE $fDiv ORDER BY nama ASC");
 
-$expNotif = [];
-$eR = mysqli_query($koneksi,"SELECT *,DATEDIFF(exp_date,CURDATE()) AS sisa_hari FROM obat WHERE exp_date<=DATE_ADD(CURDATE(),INTERVAL 30 DAY) AND $fDiv ORDER BY exp_date ASC LIMIT 5");
-while ($e=mysqli_fetch_assoc($eR)) $expNotif[]=$e;
-
-function stBadge($s,$m){ if($s==0) return ['Habis','badge-danger']; if($s<$m) return ['Menipis','badge-warn']; return ['Aman','badge-ok']; }
-$pageTitle='Stok Obat'; $pageSubtitle='Input & Output';
+$pageTitle = 'Manajemen Data Obat';
 ?>
-<!DOCTYPE html><html lang="id"><head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Stok — SiMoSoBa</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
-<link rel="stylesheet" href="../css/main.css"/>
-</head><body>
-<?php include 'includes/topbar.php'; ?>
-<div id="main-content"><div class="page-body">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $pageTitle ?> — SiMoSoBa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { navy: '#1e293b', emerald: '#10b981', softgrey: '#f8fafc', rose: '#e11d48', amber: '#f59e0b' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Poppins', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-softgrey font-sans antialiased">
 
-<?php if ($notif): ?>
-  <div class="alert alert-<?= $notif[0] ?>" style="margin-top:.875rem;"><?= $notif[1] ?></div>
-<?php endif; ?>
+    <?php include 'includes/sidebar.php'; ?>
 
-<!-- ── Form Row ──────────────────────────────────────────── -->
-<div style="display:grid;grid-template-columns:<?= canManageObat()?'1fr 1fr':'1fr' ?>;gap:1rem;margin:1rem 0;">
+    <main class="ml-64 p-8">
+        <!-- Top Bar -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-navy"><?= $pageTitle ?></h1>
+                <p class="text-slate-500 text-sm">Kelola inventaris obat divisi Anda</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <?php if ($notif): ?>
+                    <div class="px-4 py-2 <?= $notif[0] == 'ok' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100' ?> border rounded-xl text-sm font-bold flex items-center gap-2 animate-bounce">
+                        <?= $notif[1] ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
 
-<?php if (canManageObat()): // Tambah obat: hanya super_admin & admin_staff ?>
-<div class="content-card">
-  <div class="card-title">➕ Input Obat Baru</div>
-  <form action="server/prosesObat.php" method="POST">
-    <input type="hidden" name="aksi" value="tambah"/>
-    <div class="form-group" style="margin-bottom:.75rem;">
-      <label class="form-label">Nama Obat <span class="req">*</span></label>
-      <input type="text" name="nama" class="form-ctrl" placeholder="Paracetamol 500mg" required/>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem;">
-      <div>
-        <label class="form-label">Kategori <span class="req">*</span></label>
-        <select name="kategori" class="form-ctrl" required>
-          <option value="">-- Pilih --</option>
-          <?php foreach(['Analgesik','Antibiotik','Antasida','Vitamin','Antihipertensi','Antihistamin','Lainnya'] as $k): ?>
-            <option value="<?= $k ?>"><?= $k ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div>
-        <label class="form-label">Satuan</label>
-        <select name="satuan" class="form-ctrl">
-          <?php foreach(['Tablet','Kapsul','Botol','Strip','Ampul','Sachet'] as $s): ?>
-            <option value="<?= $s ?>"><?= $s ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem;">
-      <div>
-        <label class="form-label">Stok <span class="req">*</span></label>
-        <input type="number" name="stok" class="form-ctrl" placeholder="100" min="0" required/>
-      </div>
-      <div>
-        <label class="form-label">Stok Min. <span class="req">*</span></label>
-        <input type="number" name="stok_min" class="form-ctrl" placeholder="30" min="1" required/>
-      </div>
-    </div>
-    <div style="margin-bottom:.75rem;">
-      <label class="form-label">Tanggal Kadaluarsa <span class="req">*</span></label>
-      <input type="date" name="exp_date" class="form-ctrl" required min="<?= date('Y-m-d') ?>"/>
-    </div>
-    <button type="submit" class="btn-primary btn-full">➕ Simpan Obat</button>
-  </form>
-</div>
-<?php endif; ?>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Forms -->
+            <div class="lg:col-span-4 space-y-8">
+                <?php if (canManageObat()): ?>
+                <!-- Add New -->
+                <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-navy mb-6 flex items-center gap-2">
+                        <i class="bi bi-plus-circle text-emerald"></i> Input Obat Baru
+                    </h4>
+                    <form action="server/prosesObat.php" method="POST" class="space-y-4">
+                        <input type="hidden" name="aksi" value="tambah"/>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Nama Obat</label>
+                            <input type="text" name="nama" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="Paracetamol 500mg" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Kategori</label>
+                                <select name="kategori" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" required>
+                                    <option value="">Pilih</option>
+                                    <?php foreach(['Analgesik','Antibiotik','Antasida','Vitamin','Lainnya'] as $k): ?>
+                                        <option value="<?= $k ?>"><?= $k ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Satuan</label>
+                                <select name="satuan" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all">
+                                    <option value="Tablet">Tablet</option>
+                                    <option value="Kapsul">Kapsul</option>
+                                    <option value="Botol">Botol</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Stok Awal</label>
+                                <input type="number" name="stok" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="0" min="0" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Stok Min</label>
+                                <input type="number" name="stok_min" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="10" min="1" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Harga Beli</label>
+                            <input type="number" name="harga" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="0" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Exp. Date</label>
+                            <input type="date" name="exp_date" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" required min="<?= date('Y-m-d') ?>">
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-navy text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-navy/10">
+                            Simpan Data Obat
+                        </button>
+                    </form>
+                </div>
+                <?php endif; ?>
 
-<!-- Form Output Stok (semua role yang canInputStok) -->
-<div class="content-card">
-  <div class="card-title">📤 Output / Pengeluaran Stok</div>
-  <form action="server/prosesObat.php" method="POST">
-    <input type="hidden" name="aksi" value="output"/>
-    <div style="margin-bottom:.75rem;">
-      <label class="form-label">Pilih Obat <span class="req">*</span></label>
-      <select name="obat_id" class="form-ctrl" onchange="previewStok(this)" required>
-        <option value="">-- Pilih Obat --</option>
-        <?php while($o=mysqli_fetch_assoc($selObat)): ?>
-          <option value="<?= $o['id'] ?>" data-stok="<?= $o['stok'] ?>" data-sat="<?= htmlspecialchars($o['satuan']) ?>">
-            <?= htmlspecialchars($o['nama']) ?> (<?= $o['stok'] ?> <?= $o['satuan'] ?>)
-          </option>
-        <?php endwhile; ?>
-      </select>
-    </div>
-    <div id="stok-preview" style="display:none;background:var(--primary-light);border-radius:10px;padding:.5rem .875rem;margin-bottom:.75rem;font-size:.8rem;color:var(--primary-dark);font-weight:600;">
-      Stok tersedia: <span class="mono" id="stok-val">-</span>
-    </div>
-    <div style="margin-bottom:.75rem;">
-      <label class="form-label">Jumlah Keluar <span class="req">*</span></label>
-      <input type="number" name="jumlah" class="form-ctrl" placeholder="Masukkan jumlah" min="1" required/>
-    </div>
-    <div style="margin-bottom:.875rem;">
-      <label class="form-label">Keterangan</label>
-      <input type="text" name="keterangan" class="form-ctrl" placeholder="Contoh: Resep dr. Budi"/>
-    </div>
-    <button type="submit" class="btn-primary btn-full" style="background:var(--info);">📤 Kurangi Stok</button>
-  </form>
-</div>
-</div><!-- /grid form -->
+                <!-- Output Form -->
+                <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-navy mb-6 flex items-center gap-2">
+                        <i class="bi bi-box-arrow-up-right text-rose"></i> Output Stok
+                    </h4>
+                    <form action="server/prosesObat.php" method="POST" class="space-y-4">
+                        <input type="hidden" name="aksi" value="output"/>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Pilih Obat</label>
+                            <select name="obat_id" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" onchange="updatePrev(this)" required>
+                                <option value="">-- Pilih Obat --</option>
+                                <?php mysqli_data_seek($selObat, 0); while($o=mysqli_fetch_assoc($selObat)): ?>
+                                    <option value="<?= $o['id'] ?>" data-stok="<?= $o['stok'] ?>" data-sat="<?= $o['satuan'] ?>">
+                                        <?= htmlspecialchars($o['nama']) ?> (<?= $o['stok'] ?>)
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div id="prev-box" class="hidden p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                            <p class="text-xs text-emerald-600 font-bold uppercase">Stok Tersedia</p>
+                            <p class="text-xl font-display font-bold text-emerald" id="prev-val">0</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Jumlah Keluar</label>
+                            <input type="number" name="jumlah" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="0" min="1" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Keterangan</label>
+                            <input type="text" name="keterangan" class="w-full px-4 py-3 bg-softgrey border border-slate-100 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="Tujuan pengeluaran">
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-rose text-white font-bold rounded-2xl hover:bg-rose-600 transition-all shadow-lg shadow-rose/10">
+                            Proses Pengeluaran
+                        </button>
+                    </form>
+                </div>
+            </div>
 
-<!-- ── Tabel Daftar Obat ─────────────────────────────────── -->
-<div class="content-card" style="margin-bottom:1.5rem;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;flex-wrap:wrap;gap:.5rem;">
-    <div class="card-title">📋 Daftar Obat</div>
-    <form method="GET" style="display:flex;gap:.5rem;flex-wrap:wrap;">
-      <input type="text" name="cari" class="form-ctrl" style="max-width:180px;" placeholder="🔍 Cari…" value="<?= htmlspecialchars($keyword) ?>"/>
-      <select name="status" class="form-ctrl" style="max-width:150px;" onchange="this.form.submit()">
-        <option value="semua" <?= $fStatus==='semua'?'selected':'' ?>>Semua</option>
-        <option value="Aman" <?= $fStatus==='Aman'?'selected':'' ?>>✅ Aman</option>
-        <option value="Menipis" <?= $fStatus==='Menipis'?'selected':'' ?>>⚠️ Menipis</option>
-        <option value="Habis" <?= $fStatus==='Habis'?'selected':'' ?>>🚨 Habis</option>
-      </select>
-      <button type="submit" class="btn-primary" style="padding:.55rem .875rem;">Cari</button>
-    </form>
-  </div>
-  <div class="overflow-x">
-    <table class="table">
-      <thead><tr>
-        <th>No</th><th>Nama Obat</th><th>Kategori</th><th>Stok</th>
-        <th>Stok Min.</th><th>Kadaluarsa</th><th>Status</th>
-        <?php if(canManageObat()): ?><th>Aksi</th><?php endif; ?>
-      </tr></thead>
-      <tbody>
-      <?php $no=1; while($o=mysqli_fetch_assoc($allObat)):
-        [$lbl,$cls] = stBadge($o['stok'],$o['stok_min']); ?>
-      <tr>
-        <td class="mono text-muted" style="font-size:.72rem;"><?= $no++ ?></td>
-        <td><strong><?= htmlspecialchars($o['nama']) ?></strong></td>
-        <td><span class="badge badge-gray"><?= htmlspecialchars($o['kategori']) ?></span></td>
-        <td class="mono fw-bold"><?= $o['stok'] ?> <span style="color:var(--text-muted);font-size:.7rem;"><?= $o['satuan'] ?></span></td>
-        <td class="mono"><?= $o['stok_min'] ?></td>
-        <td style="font-size:.8rem;color:var(--text-sub);"><?= date('d/m/Y',strtotime($o['exp_date'])) ?></td>
-        <td><span class="badge <?= $cls ?>"><?= $lbl ?></span></td>
-        <?php if(canManageObat()): ?>
-        <td><a href="server/prosesObat.php?aksi=hapus&id=<?= $o['id'] ?>" class="btn-danger"
-               onclick="return confirm('Hapus obat: <?= htmlspecialchars(addslashes($o['nama'])) ?>?')">
-          <i class="bi bi-trash"></i>
-        </a></td>
-        <?php endif; ?>
-      </tr>
-      <?php endwhile; ?>
-      <?php if(mysqli_num_rows($allObat)===0): ?>
-        <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">Tidak ada data.</td></tr>
-      <?php endif; ?>
-      </tbody>
-    </table>
-  </div>
-</div>
+            <!-- Right: Table -->
+            <div class="lg:col-span-8">
+                <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+                    <div class="flex flex-col md:row items-center justify-between mb-8 gap-4">
+                        <h4 class="font-bold text-navy text-xl">Daftar Inventaris</h4>
+                        <form method="GET" class="flex gap-2">
+                            <input type="text" name="cari" class="px-4 py-2 bg-softgrey border border-slate-100 rounded-xl text-sm focus:outline-none focus:border-emerald" placeholder="Cari obat..." value="<?= htmlspecialchars($keyword) ?>">
+                            <button class="px-4 py-2 bg-navy text-white rounded-xl text-sm font-bold">Cari</button>
+                        </form>
+                    </div>
 
-</div></div>
-<?php include 'includes/bottom_nav.php'; ?>
-<?php include 'includes/scripts.php'; ?>
-<script>
-function previewStok(sel){
-  const opt=sel.options[sel.selectedIndex],box=document.getElementById('stok-preview'),val=document.getElementById('stok-val');
-  if(sel.value){val.textContent=opt.dataset.stok+' '+opt.dataset.sat;box.style.display='block';}
-  else box.style.display='none';
-}
-</script>
-</body></html>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-slate-400 text-[10px] uppercase tracking-widest border-b border-slate-50">
+                                    <th class="pb-4">Nama Obat</th>
+                                    <th class="pb-4 text-center">Stok</th>
+                                    <th class="pb-4 text-center">Min.</th>
+                                    <th class="pb-4">Exp. Date</th>
+                                    <th class="pb-4">Status</th>
+                                    <th class="pb-4">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <?php while($o=mysqli_fetch_assoc($allObat)): 
+                                    $low = $o['stok'] < $o['stok_min'];
+                                    $habis = $o['stok'] == 0;
+                                ?>
+                                <tr class="group hover:bg-slate-50 transition-all">
+                                    <td class="py-5">
+                                        <p class="font-bold text-navy group-hover:text-emerald transition-colors"><?= htmlspecialchars($o['nama']) ?></p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase"><?= htmlspecialchars($o['kategori']) ?></p>
+                                    </td>
+                                    <td class="py-5 text-center font-display font-bold text-navy"><?= $o['stok'] ?></td>
+                                    <td class="py-5 text-center text-xs text-slate-400"><?= $o['stok_min'] ?></td>
+                                    <td class="py-5 text-sm text-slate-500"><?= date('d/m/y', strtotime($o['exp_date'])) ?></td>
+                                    <td class="py-5">
+                                        <?php if($habis): ?>
+                                            <span class="px-3 py-1 bg-rose/10 text-rose text-[10px] font-bold rounded-full uppercase">Habis</span>
+                                        <?php elseif($low): ?>
+                                            <span class="px-3 py-1 bg-amber/10 text-amber text-[10px] font-bold rounded-full uppercase">Kritis</span>
+                                        <?php else: ?>
+                                            <span class="px-3 py-1 bg-emerald/10 text-emerald text-[10px] font-bold rounded-full uppercase">Aman</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="py-5">
+                                        <div class="flex items-center gap-2">
+                                            <a href="server/prosesObat.php?aksi=hapus&id=<?= $o['id'] ?>" class="w-8 h-8 flex items-center justify-center bg-rose/10 text-rose rounded-lg hover:bg-rose hover:text-white transition-all" onclick="return confirm('Hapus data ini?')">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function updatePrev(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            const box = document.getElementById('prev-box');
+            const val = document.getElementById('prev-val');
+            if(sel.value) {
+                val.textContent = opt.dataset.stok + ' ' + opt.dataset.sat;
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

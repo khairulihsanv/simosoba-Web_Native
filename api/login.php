@@ -1,431 +1,173 @@
 <?php
-// ============================================================
-// login.php — Halaman Login & Register
-// session_start() WAJIB di baris paling atas sebelum HTML
-// ============================================================
 require_once 'server/session_handler.php';
 session_start();
 include 'server/koneksi.php';
 
-// Sudah login → langsung ke dashboard
 if (!empty($_SESSION['user_id'])) { header('Location: dashboard.php'); exit(); }
 
-// Tab aktif: 'login' atau 'register'
-// Ditentukan dari URL ?tab=register setelah redirect error
 $tab = $_GET['tab'] ?? 'login';
 
-// Pesan error
-$errLogin = [
-    'invalid'  => 'Username atau password salah.',
-    'empty'    => 'Semua field wajib diisi.',
-];
+$errLogin = ['invalid' => 'Username atau password salah.', 'empty' => 'Semua field wajib diisi.'];
 $errReg = [
-    'empty'     => 'Semua field wajib diisi.',
-    'short'     => 'Password minimal 6 karakter.',
-    'mismatch'  => 'Konfirmasi password tidak cocok.',
-    'duplicate' => 'Username sudah digunakan, coba yang lain.',
-    'db'        => 'Gagal menyimpan data, coba lagi.',
+    'empty' => 'Semua field wajib diisi.', 'short' => 'Password minimal 6 karakter.',
+    'mismatch' => 'Konfirmasi password tidak cocok.', 'duplicate' => 'Username sudah digunakan.',
+    'db' => 'Gagal menyimpan data.'
 ];
-$errKey = $_GET['error']   ?? '';
+$errKey = $_GET['error'] ?? '';
 $sucKey = $_GET['success'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SiMoSoBa — Masuk</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
-
-  <style>
-    /* ============================================================
-       LOGIN PAGE CSS
-       Untuk mengubah background → cari komentar "BG GRADIENT"
-       Untuk mengubah warna card glass → cari komentar "GLASS CARD"
-       Untuk mengubah warna tombol login → cari komentar "BTN LOGIN"
-       Untuk mengubah animasi → cari komentar "ANIMASI"
-       ============================================================ */
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      padding: 2rem 0; /* Tambahkan padding agar tidak mentok di HP */
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── BG GRADIENT ─────────────────────────────────────────
-       Untuk ganti warna background, ubah nilai di bawah.
-       Contoh ganti ke biru: #1e3a8a → #0ea5e9
-       Mengedit 3 nilai warna berarti 3 titik gradien berbeda */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      /* Gradien utama: hijau tua ke hijau mint */
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 30%, #00a878 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 80% 70%, #00c896 0%, transparent 55%),
-        linear-gradient(135deg, #005c40 0%, #00915e 40%, #00c896 100%);
-      z-index: -2;
-    }
-
-    /* ── DEKORASI Y2K ────────────────────────────────────────
-       Lingkaran-lingkaran dekoratif di background.
-       Untuk hilangkan → hapus ::after dan .orb-* */
-    body::after {
-      content: '';
-      position: fixed; inset: 0;
-      /* Pola grid halus ala Y2K */
-      background-image:
-        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-      background-size: 40px 40px;
-      z-index: -1;
-    }
-
-    /* Blob dekoratif (bisa dihapus jika tidak suka) */
-    .orb {
-      position: fixed; border-radius: 50%;
-      filter: blur(60px); opacity: .35; z-index: -1;
-      pointer-events: none;
-      /* ANIMASI: blob bergerak perlahan (min-animasi, tidak tabrakan JS) */
-      animation: drift 8s ease-in-out infinite alternate;
-    }
-    /* Untuk ganti warna blob → ubah background di masing-masing .orb */
-    .orb-1 { width:320px;height:320px;background:#a8ff3e;top:-80px;right:-60px; animation-delay:0s; }
-    .orb-2 { width:200px;height:200px;background:#7dd3fc;bottom:10%;left:-40px; animation-delay:-3s; }
-    .orb-3 { width:150px;height:150px;background:#ffffff;bottom:5%;right:15%;  animation-delay:-6s; opacity:.15; }
-
-    @keyframes drift {
-      /* ANIMASI: blob melayang. Ubah translate nilai untuk range gerak */
-      from { transform: translate(0, 0) scale(1); }
-      to   { transform: translate(20px, 30px) scale(1.05); }
-    }
-
-    /* ── GLASS CARD ──────────────────────────────────────────
-       Card utama dengan efek kaca (glassmorphism).
-       Untuk ubah transparansi: ubah rgba keempat angka (0.18 = 18% opak)
-       Untuk ubah blur: ubah backdrop-filter nilai blur()
-       Untuk ubah lebar: ubah max-width */
-    .glass-card {
-      width: 100%;
-      max-width: 420px;     /* ← lebar maksimum card login */
-      margin: 1.5rem;
-      background: rgba(255, 255, 255, 0.18);  /* ← transparansi glass */
-      backdrop-filter: blur(24px);             /* ← kekuatan blur glass */
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      border-radius: 24px;
-      padding: 2rem 1.875rem;
-      box-shadow:
-        0 8px 32px rgba(0, 0, 0, .15),
-        inset 0 1px 0 rgba(255,255,255,.4);
-      /* ANIMASI: card muncul dari bawah saat halaman load */
-      animation: cardUp .5s cubic-bezier(.34,1.56,.64,1);
-    }
-    @keyframes cardUp {
-      from { opacity:0; transform: translateY(30px) scale(.95); }
-      to   { opacity:1; transform: none; }
-    }
-
-    /* Judul brand di atas card */
-    .brand {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    .brand-icon {
-      font-size: 2.5rem;
-      /* ANIMASI: ikon capsul berputar perlahan */
-      display: inline-block;
-      animation: spin 6s linear infinite;
-    }
-    @keyframes spin {
-      /* Rotasi lambat. Ubah 360deg ke 0deg untuk balik arah */
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    .brand-name {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.6rem; font-weight: 700;
-      color: #fff; letter-spacing: -1px;
-      display: block; margin-top: .25rem;
-      text-shadow: 0 2px 8px rgba(0,0,0,.2);
-    }
-    .brand-tagline {
-      font-size: .75rem; color: rgba(255,255,255,.7);
-      font-weight: 500; letter-spacing: .5px; margin-top: 2px;
-    }
-
-    /* ── Tab Login / Register ────────────────────────────
-       Untuk tambah tab baru → tambah tab-btn + form section
-       dan update logika JS toggleTab() */
-    .tabs {
-      display: flex; gap: 4px;
-      background: rgba(0,0,0,.15);
-      border-radius: 12px; padding: 4px;
-      margin-bottom: 1.5rem;
-    }
-    .tab-btn {
-      flex: 1; padding: .5rem;
-      border: none; border-radius: 8px;
-      font-family: inherit; font-size: .82rem; font-weight: 700;
-      cursor: pointer;
-      transition: all .2s;
-      color: rgba(255,255,255,.7);
-      background: transparent;
-    }
-    /* Tab aktif: putih solid */
-    .tab-btn.active {
-      background: rgba(255,255,255,.95);
-      color: #005c40;
-      box-shadow: 0 2px 8px rgba(0,0,0,.1);
-    }
-
-    /* ── Form Section ────────────────────────────────────
-       Setiap form (login/register) ada di .form-section
-       Tersembunyi dengan display:none, ditampilkan via JS */
-    .form-section { display: none; }
-    .form-section.show { display: block; }
-
-    /* Label & Input */
-    .form-group { margin-bottom: 1rem; }
-    .form-label {
-      display: block; font-size: .74rem; font-weight: 700;
-      color: rgba(255,255,255,.85); margin-bottom: 5px; letter-spacing: .3px;
-    }
-    .input-wrap { position: relative; }
-    .input-wrap .ico {
-      position: absolute; left: 11px; top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,255,255,.5); font-size: .95rem; pointer-events: none;
-    }
-    /* ── INPUT FIELD ──────────────────────────────────────
-       Untuk ubah warna background input → ubah rgba di background
-       Untuk ubah border saat focus → ubah border-color di :focus */
-    .form-ctrl {
-      width: 100%;
-      padding: .65rem .875rem .65rem 2.25rem;
-      background: rgba(255,255,255,.15);  /* ← transparansi input */
-      border: 1.5px solid rgba(255,255,255,.3);
-      border-radius: 10px;
-      font-family: inherit; font-size: .875rem;
-      color: #fff; outline: none;
-      transition: border-color .2s, background .2s;
-    }
-    .form-ctrl::placeholder { color: rgba(255,255,255,.45); }
-    .form-ctrl:focus {
-      border-color: rgba(255,255,255,.8);
-      background: rgba(255,255,255,.22);
-    }
-
-    /* Tombol lihat password */
-    .btn-eye {
-      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; color: rgba(255,255,255,.5);
-      cursor: pointer; font-size: .95rem; padding: 0; transition: color .15s;
-    }
-    .btn-eye:hover { color: rgba(255,255,255,.9); }
-
-    /* ── BTN LOGIN / REGISTER ────────────────────────────
-       Untuk ganti warna tombol → ubah background di .btn-submit
-       Untuk ganti warna hover → ubah background di .btn-submit:hover */
-    .btn-submit {
-      width: 100%; padding: .75rem;
-      background: #fff;           /* ← warna tombol (putih di atas hijau) */
-      color: #005c40;             /* ← warna teks tombol */
-      border: none; border-radius: 12px;
-      font-family: inherit; font-size: .92rem; font-weight: 800;
-      cursor: pointer; margin-top: .5rem;
-      display: flex; align-items: center; justify-content: center; gap: 7px;
-      transition: background .2s, transform .1s, box-shadow .2s;
-      box-shadow: 0 4px 16px rgba(0,0,0,.15);
-    }
-    .btn-submit:hover {
-      background: #e0faf3;        /* ← warna hover tombol */
-      box-shadow: 0 6px 20px rgba(0,0,0,.2);
-    }
-    .btn-submit:active { transform: scale(.97); }
-
-    /* Alert error/sukses */
-    .alert {
-      padding: .625rem .875rem;
-      border-radius: 10px; font-size: .8rem; font-weight: 600;
-      margin-bottom: 1rem;
-      display: flex; align-items: center; gap: 7px;
-      animation: alertIn .3s ease;
-    }
-    @keyframes alertIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
-    .alert-err { background: rgba(239,68,68,.25); color: #fff; border:1px solid rgba(239,68,68,.4); }
-    .alert-ok  { background: rgba(0,200,150,.25); color: #fff; border:1px solid rgba(0,200,150,.4); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiMoSoBa — Masuk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { navy: '#1e293b', emerald: '#10b981', softgrey: '#f8fafc' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Poppins', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .form-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-active { background: #1e293b; color: white; box-shadow: 0 10px 15px -3px rgba(30, 41, 59, 0.2); }
+    </style>
 </head>
-<body>
+<body class="bg-softgrey min-h-screen flex items-center justify-center p-6">
 
-<!-- Blob dekoratif Y2K (hapus 3 div ini jika tidak suka animasi blob) -->
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div class="orb orb-3"></div>
+    <!-- Decorative Elements -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-emerald/5 blur-[120px] rounded-full"></div>
+        <div class="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-navy/5 blur-[120px] rounded-full"></div>
+    </div>
 
-<!-- ── Glass Card Utama ─────────────────────────────── -->
-<div class="glass-card">
-
-  <!-- Brand -->
-  <div class="brand">
-    <span class="brand-icon">💊</span>
-    <span class="brand-name">SiMoSoBa</span>
-    <div class="brand-tagline">Sistem Monitoring Stok Obat</div>
-  </div>
-
-  <!-- Tab: Login | Register -->
-  <div class="tabs">
-    <button class="tab-btn <?= $tab==='login'?'active':'' ?>"
-            onclick="switchTab('login')" id="tab-login">
-      Masuk
-    </button>
-    <button class="tab-btn <?= $tab==='register'?'active':'' ?>"
-            onclick="switchTab('register')" id="tab-register">
-      Daftar
-    </button>
-  </div>
-
-  <!-- ══ FORM LOGIN ═══════════════════════════════════════ -->
-  <div class="form-section <?= $tab==='login'?'show':'' ?>" id="sec-login">
-
-    <!-- Alert error (muncul jika ada ?error=... di URL) -->
-    <?php if ($tab==='login' && $errKey && isset($errLogin[$errKey])): ?>
-      <div class="alert alert-err"><i class="bi bi-x-circle-fill"></i><?= $errLogin[$errKey] ?></div>
-    <?php endif; ?>
-    <?php if ($sucKey === 'registered'): ?>
-      <div class="alert alert-ok"><i class="bi bi-check-circle-fill"></i>Akun berhasil dibuat! Silakan masuk.</div>
-    <?php endif; ?>
-    <?php if (isset($_GET['logout'])): ?>
-      <div class="alert alert-ok"><i class="bi bi-check-circle-fill"></i>Berhasil logout.</div>
-    <?php endif; ?>
-
-    <!-- Form action ke server/prosesLogin.php -->
-    <form action="server/prosesLogin.php" method="POST" autocomplete="off">
-
-      <div class="form-group">
-        <label class="form-label">Username</label>
-        <div class="input-wrap">
-          <i class="bi bi-person ico"></i>
-          <input type="text" name="username" class="form-ctrl"
-                 placeholder="Masukkan username" required
-                 value="<?= htmlspecialchars($_GET['username'] ?? '') ?>"/>
+    <div class="w-full max-w-[450px]">
+        <!-- Brand -->
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald text-3xl mx-auto shadow-xl border border-slate-100 mb-4">
+                <i class="bi bi-capsule-pill"></i>
+            </div>
+            <h1 class="font-display font-bold text-3xl text-navy">SiMo<span class="text-emerald">SoBa</span></h1>
+            <p class="text-slate-500 font-medium">Sistem Monitoring Stok Obat</p>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <div class="input-wrap">
-          <i class="bi bi-lock ico"></i>
-          <input type="password" id="pw-login" name="password" class="form-ctrl"
-                 placeholder="Masukkan password" required/>
-          <!-- Tombol show/hide password -->
-          <button type="button" class="btn-eye" onclick="togglePw('pw-login','eye-login')">
-            <i class="bi bi-eye" id="eye-login"></i>
-          </button>
+        <div class="bg-white rounded-[32px] p-8 shadow-2xl shadow-navy/5 border border-slate-100">
+            <!-- Tabs -->
+            <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-8">
+                <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-3 text-sm font-bold rounded-xl form-transition <?= $tab==='login'?'tab-active':'text-slate-500 hover:text-navy' ?>">
+                    Login
+                </button>
+                <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-3 text-sm font-bold rounded-xl form-transition <?= $tab==='register'?'tab-active':'text-slate-500 hover:text-navy' ?>">
+                    Daftar
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="sec-login" class="form-transition <?= $tab==='login'?'block':'hidden scale-95 opacity-0' ?>">
+                <?php if ($tab==='login' && $errKey && isset($errLogin[$errKey])): ?>
+                    <div class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold rounded-xl flex items-center gap-3">
+                        <i class="bi bi-exclamation-triangle"></i> <?= $errLogin[$errKey] ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($sucKey === 'registered'): ?>
+                    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-semibold rounded-xl flex items-center gap-3">
+                        <i class="bi bi-check-circle"></i> Berhasil! Silakan masuk.
+                    </div>
+                <?php endif; ?>
+
+                <form action="server/prosesLogin.php" method="POST" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-navy mb-2">Username</label>
+                        <div class="relative group">
+                            <i class="bi bi-person absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald transition-colors"></i>
+                            <input type="text" name="username" class="w-full pl-11 pr-4 py-3.5 bg-softgrey border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald focus:ring-4 focus:ring-emerald/5 transition-all" placeholder="Masukkan username" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-navy mb-2">Password</label>
+                        <div class="relative group">
+                            <i class="bi bi-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald transition-colors"></i>
+                            <input type="password" id="pw-login" name="password" class="w-full pl-11 pr-12 py-3.5 bg-softgrey border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald focus:ring-4 focus:ring-emerald/5 transition-all" placeholder="••••••••" required>
+                            <button type="button" onclick="togglePw('pw-login','eye-login')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy transition-colors">
+                                <i class="bi bi-eye" id="eye-login"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-4 bg-navy text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-navy/20 flex items-center justify-center gap-3">
+                        Masuk Sekarang <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div id="sec-register" class="form-transition <?= $tab==='register'?'block':'hidden scale-95 opacity-0' ?>">
+                <?php if ($tab==='register' && $errKey && isset($errReg[$errKey])): ?>
+                    <div class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-semibold rounded-xl flex items-center gap-3">
+                        <i class="bi bi-exclamation-triangle"></i> <?= $errReg[$errKey] ?>
+                    </div>
+                <?php endif; ?>
+
+                <form action="server/prosesRegister.php" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-navy mb-1.5">Nama Lengkap</label>
+                        <input type="text" name="nama" class="w-full px-4 py-3 bg-softgrey border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="Nama lengkap Anda" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-navy mb-1.5">Username</label>
+                        <input type="text" name="username" class="w-full px-4 py-3 bg-softgrey border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="Buat username" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-navy mb-1.5">Password</label>
+                        <input type="password" id="pw-reg" name="password" class="w-full px-4 py-3 bg-softgrey border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="Min. 6 karakter" required minlength="6">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-navy mb-1.5">Konfirmasi</label>
+                        <input type="password" name="konfirmasi" class="w-full px-4 py-3 bg-softgrey border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-emerald transition-all" placeholder="Ulangi password" required>
+                    </div>
+                    <button type="submit" class="w-full py-4 bg-emerald text-white font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald/20 mt-4">
+                        Buat Akun
+                    </button>
+                </form>
+            </div>
         </div>
-      </div>
+    </div>
 
-      <button type="submit" class="btn-submit">
-        <i class="bi bi-box-arrow-in-right"></i> Masuk
-      </button>
+    <script>
+        function switchTab(name) {
+            const isLogin = name === 'login';
+            const loginTab = document.getElementById('tab-login');
+            const regTab = document.getElementById('tab-register');
+            const loginSec = document.getElementById('sec-login');
+            const regSec = document.getElementById('sec-register');
 
-    </form>
-  </div><!-- /sec-login -->
+            loginTab.className = `flex-1 py-3 text-sm font-bold rounded-xl form-transition ${isLogin ? 'tab-active' : 'text-slate-500 hover:text-navy'}`;
+            regTab.className = `flex-1 py-3 text-sm font-bold rounded-xl form-transition ${!isLogin ? 'tab-active' : 'text-slate-500 hover:text-navy'}`;
 
-  <!-- ══ FORM REGISTER ════════════════════════════════════ -->
-  <div class="form-section <?= $tab==='register'?'show':'' ?>" id="sec-register">
+            if(isLogin) {
+                regSec.classList.add('hidden', 'scale-95', 'opacity-0');
+                loginSec.classList.remove('hidden');
+                setTimeout(() => loginSec.classList.remove('scale-95', 'opacity-0'), 10);
+            } else {
+                loginSec.classList.add('hidden', 'scale-95', 'opacity-0');
+                regSec.classList.remove('hidden');
+                setTimeout(() => regSec.classList.remove('scale-95', 'opacity-0'), 10);
+            }
+        }
 
-    <?php if ($tab==='register' && $errKey && isset($errReg[$errKey])): ?>
-      <div class="alert alert-err"><i class="bi bi-x-circle-fill"></i><?= $errReg[$errKey] ?></div>
-    <?php endif; ?>
-
-    <!-- Form action ke server/prosesRegister.php -->
-    <!-- Role default yang didapat: 'user' (bisa di-upgrade oleh super_admin) -->
-    <form action="server/prosesRegister.php" method="POST" autocomplete="off">
-
-      <div class="form-group">
-        <label class="form-label">Nama Lengkap</label>
-        <div class="input-wrap">
-          <i class="bi bi-person-badge ico"></i>
-          <input type="text" name="nama" class="form-ctrl"
-                 placeholder="Nama lengkap kamu" required/>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Username</label>
-        <div class="input-wrap">
-          <i class="bi bi-at ico"></i>
-          <input type="text" name="username" class="form-ctrl"
-                 placeholder="Buat username unik" required/>
-        </div>
-      </div>
-
-
-      <div class="form-group">
-        <label class="form-label">Password <span style="color:rgba(255,255,255,.5);font-weight:400;">(min. 6 karakter)</span></label>
-        <div class="input-wrap">
-          <i class="bi bi-lock ico"></i>
-          <input type="password" id="pw-reg" name="password" class="form-ctrl"
-                 placeholder="Buat password" required minlength="6"/>
-          <button type="button" class="btn-eye" onclick="togglePw('pw-reg','eye-reg')">
-            <i class="bi bi-eye" id="eye-reg"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Konfirmasi Password</label>
-        <div class="input-wrap">
-          <i class="bi bi-lock-fill ico"></i>
-          <input type="password" name="konfirmasi" class="form-ctrl"
-                 placeholder="Ulangi password" required/>
-        </div>
-      </div>
-
-      
-
-      <button type="submit" class="btn-submit">
-        <i class="bi bi-person-plus-fill"></i> Buat Akun
-      </button>
-
-    </form>
-  </div><!-- /sec-register -->
-
-</div><!-- /glass-card -->
-
-<script>
-/* ── switchTab(): Ganti tab Login ↔ Register ─────────────
-   Mengubah class active pada tombol tab dan
-   class show pada form section yang sesuai
-   Untuk tambah tab baru: tambah case di fungsi ini */
-function switchTab(name) {
-  ['login','register'].forEach(t => {
-    document.getElementById('tab-' + t).classList.toggle('active', t === name);
-    document.getElementById('sec-'  + t).classList.toggle('show',   t === name);
-  });
-}
-
-/* ── togglePw(): Show/hide password ─────────────────────
-   id = ID elemen input password
-   iconId = ID elemen <i> ikon mata */
-function togglePw(id, iconId) {
-  const inp  = document.getElementById(id);
-  const icon = document.getElementById(iconId);
-  const hide = inp.type === 'password';
-  inp.type   = hide ? 'text' : 'password';
-  icon.className = hide ? 'bi bi-eye-slash' : 'bi bi-eye';
-}
-</script>
-
+        function togglePw(id, iconId) {
+            const inp = document.getElementById(id);
+            const icon = document.getElementById(iconId);
+            const isPw = inp.type === 'password';
+            inp.type = isPw ? 'text' : 'password';
+            icon.className = isPw ? 'bi bi-eye-slash' : 'bi bi-eye';
+        }
+    </script>
 </body>
 </html>
