@@ -8,13 +8,23 @@ if (!defined('BASE_PATH')) {
     define('BASE_PATH', __DIR__);
 }
 
-// 1.1 Base URL Detection (Vercel vs Localhost)
+// 1.1 Base URL Detection (Robust Vercel & Localhost)
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'];
-// Deteksi jika di localhost dengan subfolder
-$uri = $_SERVER['REQUEST_URI'];
-$base_dir = (strpos($host, 'localhost') !== false) ? '/simosoba2' : '';
-define('BASE_URL', $protocol . $host . $base_dir);
+$base_url = $protocol . $host;
+
+if (strpos($host, 'localhost') !== false) {
+    // Deteksi subfolder secara otomatis di localhost
+    $script_dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+    // Jika kita di dalam folder api/ atau actions/, ambil parent-nya
+    if (strpos($script_dir, '/api') !== false || strpos($script_dir, '/actions') !== false) {
+        $base_url .= str_replace(['/api', '/actions'], '', $script_dir);
+    } else {
+        $base_url .= ($script_dir === '/') ? '' : $script_dir;
+    }
+}
+
+define('BASE_URL', rtrim($base_url, '/'));
 
 // 2. Session Start (Vercel Fix)
 if (session_status() === PHP_SESSION_NONE) {

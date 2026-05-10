@@ -7,16 +7,22 @@
   },
   "routes": [
     {
-      "src": "/api/assets/(.*)",
-      "dest": "/api/assets/$1"
+      "src": "/css/(.*)",
+      "dest": "/css/$1",
+      "headers": { "cache-control": "s-maxage=31536000, immutable", "Content-Type": "text/css" }
     },
     {
-      "src": "/css/(.*)",
-      "dest": "/css/$1"
+      "src": "/js/(.*)",
+      "dest": "/js/$1",
+      "headers": { "cache-control": "s-maxage=31536000, immutable", "Content-Type": "application/javascript" }
     },
     {
       "src": "/assets/(.*)",
       "dest": "/assets/$1"
+    },
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
     },
     {
       "src": "/(.*)",
