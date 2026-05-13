@@ -29,6 +29,7 @@ $topObat = $stmt->fetchAll();
 // Log
 $stmt = $pdo->prepare("SELECT t.*, o.nama AS nm, o.satuan, u.nama AS nu FROM transaksi t JOIN obat o ON t.obat_id=o.id JOIN users u ON t.user_id=u.id WHERE $fDivLog AND t.created_at >= ? AND t.created_at <= ? ORDER BY t.created_at DESC LIMIT 30");
 $stmt->execute([$dari, $sampai . ' 23:59:59']);
+$logs = $stmt->fetchAll();
 
 $stmt = $pdo->prepare("SELECT DATE(t.created_at) as tgl, 
     SUM(CASE WHEN t.tipe IN ('masuk','input') THEN t.jumlah ELSE 0 END) as total_masuk,
