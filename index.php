@@ -3,7 +3,7 @@
  * index.php - Entry Point & Landing Page
  * Digunakan sebagai router dan tampilan utama (Landing Page)
  */
-
+header("Content-Type: text/html; charset=utf-8");
 require_once 'init.php';
 
 // Route Logic
