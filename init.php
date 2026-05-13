@@ -84,19 +84,9 @@ if (!function_exists('canManageObat')) {
  */
 if (!function_exists('generateQR')) {
     function generateQR(string $data, string $filename): string {
-        $qr_dir = BASE_PATH . '/assets/qr';
-        if (!is_dir($qr_dir)) mkdir($qr_dir, 0777, true);
-        
         $url = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . urlencode($data) . "&choe=UTF-8";
-        $file_path = $qr_dir . '/' . $filename . '.png';
-        
-        // Simpan lokal jika belum ada (opsional, tapi user minta jalur absolut)
-        if (!file_exists($file_path)) {
-            $content = file_get_contents($url);
-            if ($content) file_put_contents($file_path, $content);
-        }
-        
-        return BASE_URL . '/assets/qr/' . $filename . '.png';
+        // Vercel read-only fix: Return the external URL directly.
+        return $url;
     }
 }
 ?>

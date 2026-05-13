@@ -19,5 +19,19 @@ class Prediksi extends Obat {
         if ($avgUsage <= 0) return "∞";
         return (string)floor($current_stock / $avgUsage);
     }
+
+    public function getSeasonalRecommendation(string $kategori, int $stok): string {
+        $month = (int)date('m');
+        $isRainySeason = ($month >= 10 || $month <= 3);
+        $kategori = strtolower($kategori);
+        
+        if ($isRainySeason && (strpos($kategori, 'flu') !== false || strpos($kategori, 'batuk') !== false || strpos($kategori, 'vitamin') !== false)) {
+            if ($stok < 50) {
+                return "⚠️ Musim Hujan: Tingkatkan stok obat kategori ini untuk mengantisipasi lonjakan permintaan.";
+            }
+            return "✅ Musim Hujan: Stok cukup untuk antisipasi lonjakan.";
+        }
+        return "Normal";
+    }
 }
 ?>

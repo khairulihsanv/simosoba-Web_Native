@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if (empty($username) || empty($password)) {
-        header("Location: index.php?page=login&error=empty");
+        header("Location: " . BASE_URL . "/index.php?page=login&error=empty");
         exit();
     }
 
@@ -41,23 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Sukses: Redirect ke Dashboard
-                header("Location: index.php?page=dashboard");
+                header("Location: " . BASE_URL . "/index.php?page=dashboard");
                 exit();
             }
         }
         
         // Gagal: Redirect ke Login dengan parameter error
-        header("Location: index.php?page=login&error=invalid");
+        header("Location: " . BASE_URL . "/index.php?page=login&error=invalid");
         exit();
 
     } catch (PDOException $e) {
         // Error DB: Tetap redirect agar tidak merusak flow, simpan pesan di log
         error_log("Login DB Error: " . $e->getMessage());
-        header("Location: index.php?page=login&error=db");
+        header("Location: " . BASE_URL . "/index.php?page=login&error=db");
         exit();
     }
 } else {
-    header("Location: index.php");
+    header("Location: " . BASE_URL . "/index.php");
     exit();
 }
 

@@ -14,6 +14,12 @@ if (empty($page)) {
     $page = isset($_SESSION['user_id']) ? 'dashboard' : 'landing';
 }
 
+// Case: Logout
+if ($page === 'logout') {
+    require_once BASE_PATH . '/actions/logout.php';
+    exit();
+}
+
 // Case: Landing Page (Integrated Design)
 if ($page === 'landing') {
     ?>
@@ -55,12 +61,12 @@ if ($page === 'landing') {
             </div>
         </nav>
 
-        <section class="pt-32 pb-20 px-6 hero-gradient">
-            <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <h1 class="font-display font-bold text-6xl leading-tight mb-6">Manajemen Stok <span class="text-emerald">Cerdas</span> & Akurat.</h1>
-                    <p class="text-lg text-slate-600 mb-10 leading-relaxed">Optimalkan ketersediaan obat Anda dengan sistem monitoring cerdas yang memprediksi kebutuhan stok secara real-time.</p>
-                    <a href="index.php?page=login" class="px-8 py-4 bg-emerald text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 w-max">Mulai Kelola Sekarang <i class="bi bi-arrow-right"></i></a>
+        <section class="pt-32 pb-20 px-4 md:px-6 hero-gradient overflow-hidden">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="text-center lg:text-left">
+                    <h1 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl leading-tight mb-6">Manajemen Stok <span class="text-emerald">Cerdas</span> & Akurat.</h1>
+                    <p class="text-base md:text-lg text-slate-600 mb-10 leading-relaxed">Optimalkan ketersediaan obat Anda dengan sistem monitoring cerdas yang memprediksi kebutuhan stok secara real-time.</p>
+                    <a href="index.php?page=login" class="px-8 py-4 bg-emerald text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 w-max mx-auto lg:mx-0">Mulai Kelola Sekarang <i class="bi bi-arrow-right"></i></a>
                 </div>
                 <div class="flex justify-center"><img src="api/assets/medical_illustration_minimalist_1778422468140.png" class="w-full max-w-lg drop-shadow-2xl"></div>
             </div>
@@ -99,7 +105,7 @@ if ($page === 'landing') {
 }
 
 // Route Logic untuk halaman lainnya
-$auth_pages = ['dashboard', 'stok', 'laporan', 'users', 'pengaturan'];
+$auth_pages = ['dashboard', 'stok', 'laporan', 'users', 'pengaturan', 'mutasi'];
 if (in_array($page, $auth_pages)) {
     // 1. Wajib Login
     if (!isset($_SESSION['user_id'])) {

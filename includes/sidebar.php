@@ -24,10 +24,17 @@ $currentPage = $_GET['page'] ?? 'dashboard';
             <span class="text-sm font-bold">Dashboard</span>
         </a>
 
+        <a href="index.php?page=mutasi" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group <?= $currentPage === 'mutasi' ? 'bg-emerald text-white shadow-lg shadow-emerald/20' : 'text-slate-400 hover:bg-white/5 hover:text-white' ?>">
+            <i class="bi bi-arrow-left-right"></i>
+            <span class="text-sm font-bold">Mutasi Stok</span>
+        </a>
+
+        <?php if (in_array($_SESSION['role'] ?? '', ['super_admin', 'admin_staff'])): ?>
         <a href="index.php?page=stok" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group <?= $currentPage === 'stok' ? 'bg-emerald text-white shadow-lg shadow-emerald/20' : 'text-slate-400 hover:bg-white/5 hover:text-white' ?>">
             <i class="bi bi-capsule"></i>
             <span class="text-sm font-bold">Data Obat</span>
         </a>
+        <?php endif; ?>
 
         <?php if (in_array($_SESSION['role'] ?? '', ['super_admin', 'admin_staff'])): ?>
         <a href="index.php?page=laporan" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group <?= $currentPage === 'laporan' ? 'bg-emerald text-white shadow-lg shadow-emerald/20' : 'text-slate-400 hover:bg-white/5 hover:text-white' ?>">

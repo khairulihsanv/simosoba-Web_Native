@@ -86,8 +86,12 @@ include BASE_PATH . '/includes/sidebar.php';
                                     <td class="px-8 py-5">
                                         <img src="<?= $qr_url ?>" class="w-10 h-10 rounded-lg shadow-sm hover:scale-150 transition-transform cursor-zoom-in">
                                     </td>
-                                    <td class="px-8 py-5 text-emerald font-bold italic text-sm">
-                                        <?= $prediksiModel->predictDaysRemaining($o['id'], $o['stok']) ?> Hari
+                                    <td class="px-8 py-5">
+                                        <p class="text-emerald font-bold italic text-sm mb-1"><?= $prediksiModel->predictDaysRemaining($o['id'], $o['stok']) ?> Hari</p>
+                                        <?php $rek = $prediksiModel->getSeasonalRecommendation($o['kategori'], $o['stok']); 
+                                        if($rek !== 'Normal'): ?>
+                                            <p class="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded-md inline-block"><?= $rek ?></p>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -117,12 +121,12 @@ include BASE_PATH . '/includes/sidebar.php';
                             </div>
                             <div class="space-y-1">
                                 <p class="text-sm font-bold text-navy">
-                                    <?= $is_out ? 'Pengeluaran' : 'Pemasukan' ?> <?= htmlspecialchars($act['nama_obat']) ?>
+                                    <?= $is_out ? 'Pengeluaran' : 'Pemasukan' ?> <?= htmlspecialchars($act['nama_obat'] ?? 'Obat') ?>
                                 </p>
                                 <p class="text-xs text-slate-500">
-                                    <span class="font-bold"><?= $act['jumlah'] ?> unit</span> oleh <?= htmlspecialchars($act['nama_user']) ?>
+                                    <span class="font-bold"><?= $act['jumlah'] ?? 0 ?> unit</span> oleh <?= htmlspecialchars($act['nama_user'] ?? 'System') ?>
                                 </p>
-                                <p class="text-[10px] text-slate-400 font-medium"><?= date('H:i • d M Y', strtotime($act['created_at'])) ?></p>
+                                <p class="text-[10px] text-slate-400 font-medium"><?= date('H:i • d M Y', strtotime($act['created_at'] ?? 'now')) ?></p>
                             </div>
                         </div>
                     <?php endforeach; ?>

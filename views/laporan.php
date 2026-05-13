@@ -29,7 +29,24 @@ $topObat = $stmt->fetchAll();
 // Log
 $stmt = $pdo->prepare("SELECT t.*, o.nama AS nm, o.satuan, u.nama AS nu FROM transaksi t JOIN obat o ON t.obat_id=o.id JOIN users u ON t.user_id=u.id WHERE $fDivLog AND t.created_at >= ? AND t.created_at <= ? ORDER BY t.created_at DESC LIMIT 30");
 $stmt->execute([$dari, $sampai . ' 23:59:59']);
-$logs = $stmt->fetchAll();
+
+$stmt = $pdo->prepare("SELECT DATE(t.created_at) as tgl, 
+    SUM(CASE WHEN t.tipe IN ('masuk','input') THEN t.jumlah ELSE 0 END) as total_masuk,
+    SUM(CASE WHEN t.tipe IN ('keluar','output') THEN t.jumlah ELSE 0 END) as total_keluar
+    FROM transaksi t JOIN obat o ON t.obat_id=o.id 
+    WHERE $fDivLog AND t.created_at >= ? AND t.created_at <= ? 
+    GROUP BY DATE(t.created_at) ORDER BY tgl ASC");
+$stmt->execute([$dari, $sampai . ' 23:59:59']);
+$chartData = $stmt->fetchAll();
+
+$chartLabels = [];
+$chartMasuk = [];
+$chartKeluar = [];
+foreach($chartData as $row) {
+    $chartLabels[] = date('d M', strtotime($row['tgl']));
+    $chartMasuk[] = (int)$row['total_masuk'];
+    $chartKeluar[] = (int)$row['total_keluar'];
+}
 ?>
 
 <main class="ml-0 md:ml-64 min-h-screen">
@@ -58,6 +75,13 @@ $logs = $stmt->fetchAll();
             <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Jenis Obat</p>
                 <p class="text-3xl font-display font-bold text-navy"><?= $tObat ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm w-full">
+            <h3 class="font-bold text-navy mb-6">📈 Grafik Mutasi Obat (Masuk vs Keluar)</h3>
+            <div class="relative h-[300px] w-full">
+                <canvas id="mutasiChart"></canvas>
             </div>
         </div>
 
@@ -119,5 +143,37 @@ $logs = $stmt->fetchAll();
         </div>
     </div>
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('mutasiChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: <?= json_encode($chartLabels) ?>,
+            datasets: [
+                {
+                    label: 'Obat Masuk',
+                    data: <?= json_encode($chartMasuk) ?>,
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                },
+                {
+                    label: 'Obat Keluar',
+                    data: <?= json_encode($chartKeluar) ?>,
+                    backgroundColor: '#e11d48',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
 
 <?php include BASE_PATH . '/includes/footer.php'; ?>
