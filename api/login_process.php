@@ -2,6 +2,8 @@
 /**
  * api/login_process.php - Proses Verifikasi (Tanpa Output)
  */
+error_reporting(0);
+@ini_set('display_errors', '0');
 ob_start(); // Buffer output untuk mencegah error headers already sent
 
 if (!defined('BASE_PATH')) {

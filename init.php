@@ -1,7 +1,10 @@
 <?php
 /**
- * init.php - Global Initialization & Autoloading
+ * init.php - Konfigurasi Inti Aplikasi
+ * Memuat semua dependency dan konfigurasi dasar.
  */
+error_reporting(0);
+@ini_set('display_errors', '0');
 
 // 1. Path Standardization
 if (!defined('BASE_PATH')) {

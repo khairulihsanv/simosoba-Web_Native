@@ -3,6 +3,8 @@
  * index.php - Entry Point & Landing Page
  * Digunakan sebagai router dan tampilan utama (Landing Page)
  */
+error_reporting(0);
+@ini_set('display_errors', '0');
 header("Content-Type: text/html; charset=utf-8");
 require_once 'init.php';
 
@@ -68,7 +70,7 @@ if ($page === 'landing') {
                     <p class="text-base md:text-lg text-slate-600 mb-10 leading-relaxed">Optimalkan ketersediaan obat Anda dengan sistem monitoring cerdas yang memprediksi kebutuhan stok secara real-time.</p>
                     <a href="index.php?page=login" class="px-8 py-4 bg-emerald text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 w-max mx-auto lg:mx-0">Mulai Kelola Sekarang <i class="bi bi-arrow-right"></i></a>
                 </div>
-                <div class="flex justify-center"><img src="api/assets/medical_illustration_minimalist_1778422468140.png" class="w-full max-w-lg drop-shadow-2xl"></div>
+                <div class="flex justify-center"><img src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88?q=80&w=800&auto=format&fit=crop" class="w-full max-w-lg rounded-3xl drop-shadow-2xl"></div>
             </div>
         </section>
 

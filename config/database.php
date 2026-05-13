@@ -44,8 +44,8 @@ try {
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
-        PDO::MYSQL_ATTR_SSL_CA       => true, // Menggunakan system CA untuk verifikasi SSL
-        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, // Abaikan verifikasi sertifikat spesifik untuk Vercel
+        Pdo\Mysql::ATTR_SSL_CA       => true, // Menggunakan system CA untuk verifikasi SSL
+        Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT => false, // Abaikan verifikasi sertifikat spesifik untuk Vercel
     ];
     
     $pdo = new PDO($dsn, $user, $pass, $options);

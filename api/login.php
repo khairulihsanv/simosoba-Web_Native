@@ -21,6 +21,8 @@ $errReg = [
 ];
 $errKey = $_GET['error'] ?? '';
 $sucKey = $_GET['success'] ?? '';
+
+include BASE_PATH . '/includes/header.php';
 ?>
 
 <!-- Login/Register UI Fragment -->
