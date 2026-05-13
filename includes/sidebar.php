@@ -29,16 +29,22 @@ $currentPage = $_GET['page'] ?? 'dashboard';
             <span class="text-sm font-bold">Data Obat</span>
         </a>
 
+        <?php if (in_array($_SESSION['role'] ?? '', ['super_admin', 'admin_staff'])): ?>
         <a href="index.php?page=laporan" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group <?= $currentPage === 'laporan' ? 'bg-emerald text-white shadow-lg shadow-emerald/20' : 'text-slate-400 hover:bg-white/5 hover:text-white' ?>">
             <i class="bi bi-file-earmark-bar-graph"></i>
             <span class="text-sm font-bold">Laporan</span>
         </a>
+        <?php endif; ?>
 
-        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin'): ?>
+        <?php if (($_SESSION['role'] ?? '') === 'super_admin'): ?>
         <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-8 mb-4">Administrator</p>
         <a href="index.php?page=users" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group <?= $currentPage === 'users' ? 'bg-emerald text-white shadow-lg shadow-emerald/20' : 'text-slate-400 hover:bg-white/5 hover:text-white' ?>">
             <i class="bi bi-people"></i>
             <span class="text-sm font-bold">Kelola User</span>
+        </a>
+        <a href="index.php?page=pengaturan" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all group <?= $currentPage === 'pengaturan' ? 'bg-emerald text-white shadow-lg shadow-emerald/20' : 'text-slate-400 hover:bg-white/5 hover:text-white' ?>">
+            <i class="bi bi-gear"></i>
+            <span class="text-sm font-bold">Pengaturan Sistem</span>
         </a>
         <?php endif; ?>
     </nav>

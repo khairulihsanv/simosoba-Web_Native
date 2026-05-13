@@ -99,10 +99,19 @@ if ($page === 'landing') {
 }
 
 // Route Logic untuk halaman lainnya
-$auth_pages = ['dashboard', 'stok', 'laporan', 'users'];
-if (in_array($page, $auth_pages) && !isset($_SESSION['user_id'])) {
-    header("Location: index.php?page=login");
-    exit();
+$auth_pages = ['dashboard', 'stok', 'laporan', 'users', 'pengaturan'];
+if (in_array($page, $auth_pages)) {
+    // 1. Wajib Login
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: index.php?page=login");
+        exit();
+    }
+    
+    // 2. Proteksi Role (Admin Only)
+    $admin_only = ['laporan', 'users', 'pengaturan'];
+    if (in_array($page, $admin_only)) {
+        $auth->requireRole(['super_admin', 'admin_staff']);
+    }
 }
 
 $view_file = BASE_PATH . '/views/' . $page . '.php';

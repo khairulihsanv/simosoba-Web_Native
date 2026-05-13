@@ -1,38 +1,12 @@
 <?php
-// views/stok.php
-if (!defined('BASE_PATH')) die('Access Denied');
+include BASE_PATH . '/includes/header.php';
+include BASE_PATH . '/includes/sidebar.php';
 
 $all_obat = $obatModel->getAll();
 $pageTitle = 'Data Stok Obat';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title><?= $pageTitle ?> — SiMoSoBa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- QR Code Library -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: { colors: { navy: '#1e293b', emerald: '#10b981', softgrey: '#f8fafc' } } }
-        }
-    </script>
-</head>
-<body class="bg-softgrey">
-    <div class="flex">
-        <!-- Sidebar Placeholder (In real app, move to includes) -->
-        <aside class="w-64 bg-navy h-screen fixed p-8 text-white space-y-8">
-            <div class="font-bold text-2xl">SiMoSoBa</div>
-            <nav class="space-y-4">
-                <a href="index.php?page=dashboard" class="block hover:text-emerald">Dashboard</a>
-                <a href="index.php?page=stok" class="block text-emerald font-bold">Data Obat</a>
-                <a href="index.php?page=logout" class="block hover:text-rose-400">Logout</a>
-            </nav>
-        </aside>
 
-        <main class="ml-64 p-8 w-full">
+<main class="ml-0 md:ml-64 min-h-screen">
             <header class="mb-10 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-navy">Manajemen Stok</h1>
                 <button onclick="startScanner()" class="px-4 py-2 bg-emerald text-white rounded-xl font-bold flex items-center gap-2">
@@ -77,8 +51,7 @@ $pageTitle = 'Data Stok Obat';
                 </table>
             </div>
         </main>
-    </div>
-
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
         let html5QrCode;
 
@@ -91,7 +64,6 @@ $pageTitle = 'Data Stok Obat';
                 (decodedText, decodedResult) => {
                     alert("Obat Terdeteksi: " + decodedText);
                     stopScanner();
-                    // Optional: window.location.href = 'index.php?page=stok&search=' + decodedText;
                 },
                 (errorMessage) => { /* scanning... */ }
             );
@@ -107,5 +79,5 @@ $pageTitle = 'Data Stok Obat';
             }
         }
     </script>
-</body>
-</html>
+</main>
+<?php include BASE_PATH . '/includes/footer.php'; ?>

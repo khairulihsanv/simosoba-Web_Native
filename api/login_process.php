@@ -35,6 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role']     = $user['role'];
                 $_SESSION['divisi']   = $user['divisi'];
 
+                // Handle Remember Me
+                if (isset($_POST['remember_me'])) {
+                    $auth->setRememberMe($user['id']);
+                }
+
                 // Sukses: Redirect ke Dashboard
                 header("Location: index.php?page=dashboard");
                 exit();

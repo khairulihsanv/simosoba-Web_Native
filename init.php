@@ -26,10 +26,14 @@ if (strpos($host, 'localhost') !== false) {
 
 define('BASE_URL', rtrim($base_url, '/'));
 
-// 2. Session Start (Vercel Fix)
+// 2. Session Start & Cache Control (Security)
 if (session_status() === PHP_SESSION_NONE) {
     if (PHP_SAPI !== 'cli') {
         session_save_path('/tmp');
+        // Prevent Back Button after logout
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
     }
     session_start();
 }
@@ -73,5 +77,26 @@ if (!function_exists('requireRole')) {
 }
 if (!function_exists('canManageObat')) {
     function canManageObat(): bool { global $auth; return $auth->canManageObat(); }
+}
+
+/**
+ * QR Code Helper (Using Google Charts API for serverless compatibility)
+ */
+if (!function_exists('generateQR')) {
+    function generateQR(string $data, string $filename): string {
+        $qr_dir = BASE_PATH . '/assets/qr';
+        if (!is_dir($qr_dir)) mkdir($qr_dir, 0777, true);
+        
+        $url = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . urlencode($data) . "&choe=UTF-8";
+        $file_path = $qr_dir . '/' . $filename . '.png';
+        
+        // Simpan lokal jika belum ada (opsional, tapi user minta jalur absolut)
+        if (!file_exists($file_path)) {
+            $content = file_get_contents($url);
+            if ($content) file_put_contents($file_path, $content);
+        }
+        
+        return BASE_URL . '/assets/qr/' . $filename . '.png';
+    }
 }
 ?>

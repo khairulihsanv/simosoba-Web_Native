@@ -63,6 +63,10 @@ $sucKey = $_GET['success'] ?? '';
                         <label class="block text-sm font-bold text-navy mb-2">Password</label>
                         <input type="password" name="password" class="w-full px-5 py-3.5 bg-softgrey border border-slate-200 rounded-2xl text-sm focus:border-emerald transition-all" required>
                     </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="remember_me" id="remember_me" class="w-4 h-4 rounded border-slate-300 text-emerald focus:ring-emerald">
+                        <label for="remember_me" class="text-sm font-medium text-slate-600 select-none cursor-pointer">Ingat saya di perangkat ini</label>
+                    </div>
                     <button type="submit" class="w-full py-4 bg-navy text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-3">
                         Masuk Sekarang <i class="bi bi-arrow-right"></i>
                     </button>
