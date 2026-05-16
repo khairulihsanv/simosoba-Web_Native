@@ -35,7 +35,7 @@ export default function Navigation() {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
       // Use replace to prevent back-button hijacking
-      window.location.replace('/auth');
+      window.location.replace('/login');
     } catch (err) {
       console.error(err);
       setLoggingOut(false);
@@ -93,6 +93,7 @@ export default function Navigation() {
             <button
               onClick={handleLogout}
               disabled={loggingOut}
+              aria-label="Logout"
               className="p-2.5 rounded-xl text-slate-400 bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-colors border border-white/5"
             >
               {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
@@ -110,6 +111,7 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-label={item.label}
                 className="relative flex flex-col items-center gap-1 p-2 min-w-[64px]"
               >
                 {isActive && (

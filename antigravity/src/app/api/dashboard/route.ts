@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
     const monthlyChart = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
+      d.setDate(1); // Set to 1st to avoid end-of-month overflow issues
       d.setMonth(d.getMonth() - i);
       const monthLabel = d.toLocaleString('default', { month: 'short' });
       

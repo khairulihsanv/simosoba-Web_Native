@@ -44,6 +44,11 @@ export async function POST(request: NextRequest) {
     const medicine = (medRows as any[])[0];
 
     if (!medicine) throw new Error('Medicine not found');
+    
+    // Prevent negative stock for 'out' transactions
+    if (type === 'out' && medicine.stock_current < quantity) {
+      throw new Error(`Insufficient stock. Current: ${medicine.stock_current}, Requested: ${quantity}`);
+    }
 
     const unitPrice = type === 'in' ? medicine.buy_price : medicine.sell_price;
     const totalPrice = unitPrice * quantity;

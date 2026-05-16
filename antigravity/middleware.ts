@@ -5,9 +5,9 @@
  * the page/API handler, at the CDN edge (zero cold start).
  *
  * Responsibilities:
- *  1. Protect dashboard routes — redirect to /auth if unauthenticated
+ *  1. Protect dashboard routes — redirect to /login if unauthenticated
  *  2. Protect admin routes — redirect to /dashboard if not superadmin
- *  3. Redirect authenticated users away from /auth to /dashboard
+ *  3. Redirect authenticated users away from /login to /dashboard
  *
  * Note: We manually decode the JWT here because the `jsonwebtoken`
  * library uses Node.js crypto APIs not available in Edge runtime.
@@ -45,16 +45,16 @@ export function middleware(request: NextRequest) {
   const isAuthed     = !!payload;
   const isSuperAdmin = payload?.role === 'superadmin';
 
-  // ── Route: /auth (Login / Register) ───────────────────────
+  // ── Route: /login (Login / Register) ───────────────────────
   // Redirect already-authenticated users to the dashboard
-  if (pathname.startsWith('/auth') && isAuthed) {
+  if (pathname.startsWith('/login') && isAuthed) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // ── Route: /dashboard/** ───────────────────────────────────
   // Require authentication
   if (pathname.startsWith('/dashboard') && !isAuthed) {
-    const loginUrl = new URL('/auth', request.url);
+    const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname); // preserve intended destination
     return NextResponse.redirect(loginUrl);
   }
@@ -63,14 +63,14 @@ export function middleware(request: NextRequest) {
   // Require authentication
   const protectedRoutes = ['/medicines', '/transactions', '/reports'];
   if (protectedRoutes.some(r => pathname.startsWith(r)) && !isAuthed) {
-    return NextResponse.redirect(new URL('/auth', request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // ── Route: /admin/** ───────────────────────────────────────
   // Require superadmin role
   if (pathname.startsWith('/admin')) {
     if (!isAuthed) {
-      return NextResponse.redirect(new URL('/auth', request.url));
+      return NextResponse.redirect(new URL('/login', request.url));
     }
     if (!isSuperAdmin) {
       return NextResponse.redirect(new URL('/dashboard?error=forbidden', request.url));
@@ -88,6 +88,6 @@ export const config = {
     '/transactions/:path*',
     '/reports/:path*',
     '/admin/:path*',
-    '/auth',
+    '/login',
   ],
 };

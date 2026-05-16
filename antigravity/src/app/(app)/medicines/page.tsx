@@ -138,12 +138,14 @@ export default function MedicinesPage() {
             <input 
               type="text" 
               placeholder="Search by name or category..." 
+              aria-label="Search medicines"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-field pl-10"
             />
           </div>
           <select 
+            aria-label="Filter by category"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="input-field md:w-48 appearance-none bg-surface-card"
@@ -208,11 +210,19 @@ export default function MedicinesPage() {
                         </td>
                         <td className="text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleOpenModal(med)} className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 transition-colors">
+                            <button 
+                              onClick={() => handleOpenModal(med)} 
+                              aria-label={`Edit ${med.name}`}
+                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 transition-colors"
+                            >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             {user?.role === 'superadmin' && (
-                              <button onClick={() => handleDelete(med.id)} className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                              <button 
+                                onClick={() => handleDelete(med.id)} 
+                                aria-label={`Delete ${med.name}`}
+                                className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             )}
@@ -245,48 +255,48 @@ export default function MedicinesPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-xs text-slate-400 mb-1">Name *</label>
-                  <input required type="text" className="input-field" value={currentMedicine?.name || ''} onChange={e => setCurrentMedicine({...currentMedicine, name: e.target.value})} />
+                  <label htmlFor="med-name" className="block text-xs text-slate-400 mb-1">Name *</label>
+                  <input id="med-name" required type="text" className="input-field" value={currentMedicine?.name || ''} onChange={e => setCurrentMedicine({...currentMedicine, name: e.target.value})} />
                 </div>
                 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Category</label>
-                  <input type="text" className="input-field" value={currentMedicine?.category || ''} onChange={e => setCurrentMedicine({...currentMedicine, category: e.target.value})} placeholder="e.g. Analgesic" />
+                  <label htmlFor="med-category" className="block text-xs text-slate-400 mb-1">Category</label>
+                  <input id="med-category" type="text" className="input-field" value={currentMedicine?.category || ''} onChange={e => setCurrentMedicine({...currentMedicine, category: e.target.value})} placeholder="e.g. Analgesic" />
                 </div>
                 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Unit</label>
-                  <input type="text" className="input-field" value={currentMedicine?.unit || ''} onChange={e => setCurrentMedicine({...currentMedicine, unit: e.target.value})} placeholder="e.g. pcs, tablet, syrup" />
+                  <label htmlFor="med-unit" className="block text-xs text-slate-400 mb-1">Unit</label>
+                  <input id="med-unit" type="text" className="input-field" value={currentMedicine?.unit || ''} onChange={e => setCurrentMedicine({...currentMedicine, unit: e.target.value})} placeholder="e.g. pcs, tablet, syrup" />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Buy Price (IDR)</label>
-                  <input type="number" min="0" className="input-field font-mono" value={currentMedicine?.buy_price || ''} onChange={e => setCurrentMedicine({...currentMedicine, buy_price: Number(e.target.value)})} />
+                  <label htmlFor="med-buy-price" className="block text-xs text-slate-400 mb-1">Buy Price (IDR)</label>
+                  <input id="med-buy-price" type="number" min="0" className="input-field font-mono" value={currentMedicine?.buy_price || ''} onChange={e => setCurrentMedicine({...currentMedicine, buy_price: Number(e.target.value)})} />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Sell Price (IDR)</label>
-                  <input type="number" min="0" className="input-field font-mono" value={currentMedicine?.sell_price || ''} onChange={e => setCurrentMedicine({...currentMedicine, sell_price: Number(e.target.value)})} />
+                  <label htmlFor="med-sell-price" className="block text-xs text-slate-400 mb-1">Sell Price (IDR)</label>
+                  <input id="med-sell-price" type="number" min="0" className="input-field font-mono" value={currentMedicine?.sell_price || ''} onChange={e => setCurrentMedicine({...currentMedicine, sell_price: Number(e.target.value)})} />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Current Stock</label>
-                  <input type="number" min="0" className="input-field font-mono" value={currentMedicine?.stock_current || ''} onChange={e => setCurrentMedicine({...currentMedicine, stock_current: Number(e.target.value)})} />
+                  <label htmlFor="med-stock" className="block text-xs text-slate-400 mb-1">Current Stock</label>
+                  <input id="med-stock" type="number" min="0" className="input-field font-mono" value={currentMedicine?.stock_current || ''} onChange={e => setCurrentMedicine({...currentMedicine, stock_current: Number(e.target.value)})} />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Safety Stock Level</label>
-                  <input type="number" min="0" className="input-field font-mono" value={currentMedicine?.safety_stock || ''} onChange={e => setCurrentMedicine({...currentMedicine, safety_stock: Number(e.target.value)})} />
+                  <label htmlFor="med-safety" className="block text-xs text-slate-400 mb-1">Safety Stock Level</label>
+                  <input id="med-safety" type="number" min="0" className="input-field font-mono" value={currentMedicine?.safety_stock || ''} onChange={e => setCurrentMedicine({...currentMedicine, safety_stock: Number(e.target.value)})} />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Expiry Date (Optional)</label>
-                  <input type="date" className="input-field [color-scheme:dark]" value={currentMedicine?.expired_at?.toString() || ''} onChange={e => setCurrentMedicine({...currentMedicine, expired_at: e.target.value || null})} />
+                  <label htmlFor="med-expiry" className="block text-xs text-slate-400 mb-1">Expiry Date (Optional)</label>
+                  <input id="med-expiry" type="date" className="input-field [color-scheme:dark]" value={currentMedicine?.expired_at?.toString() || ''} onChange={e => setCurrentMedicine({...currentMedicine, expired_at: e.target.value || null})} />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Seasonal Tag</label>
-                  <select className="input-field appearance-none bg-surface-card" value={currentMedicine?.seasonal_tag || 'None'} onChange={e => setCurrentMedicine({...currentMedicine, seasonal_tag: e.target.value as 'Rainy' | 'Dry' | 'None'})}>
+                  <label htmlFor="med-season" className="block text-xs text-slate-400 mb-1">Seasonal Tag</label>
+                  <select id="med-season" className="input-field appearance-none bg-surface-card" value={currentMedicine?.seasonal_tag || 'None'} onChange={e => setCurrentMedicine({...currentMedicine, seasonal_tag: e.target.value as 'Rainy' | 'Dry' | 'None'})}>
                     <option value="None">None</option>
                     <option value="Rainy">Rainy Season</option>
                     <option value="Dry">Dry Season</option>

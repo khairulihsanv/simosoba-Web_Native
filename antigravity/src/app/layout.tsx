@@ -4,20 +4,21 @@ import './globals.css';
 /**
  * src/app/layout.tsx
  * ─────────────────────────────────────────────────────────────
- * Root application layout. Injects fonts, CSS, and SEO config.
+ * Root layout with high-value aesthetic configuration.
+ * Sets the dark theme foundation and typography.
  * ─────────────────────────────────────────────────────────────
  */
 
 export const metadata: Metadata = {
   title: 'Antigravity | Pharmacy Intelligence',
-  description: 'Production-ready pharmacy stock and financial monitoring system.',
+  description: 'Next-generation pharmacy stock and financial intelligence system.',
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1, // Prevents unintended zoom on input focus in mobile
-  themeColor: '#0a0a14',
+  maximumScale: 1,
+  themeColor: '#020617', // slate-950
 };
 
 export default function RootLayout({
@@ -26,8 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>{children}</body>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="bg-slate-950 text-slate-200 selection:bg-brand-500/30">
+        {children}
+      </body>
     </html>
   );
 }

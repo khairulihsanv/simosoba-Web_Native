@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch user from database
     const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
-    const users = rows as (User & { password: string })[];
+    const users = rows as (User & { password_hash: string })[];
 
     if (users.length === 0) {
       return NextResponse.json({ success: false, error: 'Invalid credentials.' }, { status: 401 });
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const user = users[0];
 
     // Verify password hash
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return NextResponse.json({ success: false, error: 'Invalid credentials.' }, { status: 401 });
     }

@@ -192,12 +192,17 @@ export default function AdminPage() {
                       </td>
                       <td className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleOpenModal(u)} className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 transition-colors">
+                          <button 
+                            onClick={() => handleOpenModal(u)} 
+                            aria-label={`Edit ${u.name}`}
+                            className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 transition-colors"
+                          >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleDelete(u.id)} 
                             disabled={u.id === currentUser.id}
+                            aria-label={`Delete ${u.name}`}
                             className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -235,16 +240,18 @@ export default function AdminPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Full Name</label>
+                <label htmlFor="user-name" className="block text-xs text-slate-400 mb-1">Full Name</label>
                 <input 
+                  id="user-name"
                   required type="text" className="input-field" 
                   value={form.name} onChange={e => setForm({...form, name: e.target.value})}
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Email Address</label>
+                <label htmlFor="user-email" className="block text-xs text-slate-400 mb-1">Email Address</label>
                 <input 
+                  id="user-email"
                   required={!editingId} type="email" className="input-field disabled:opacity-50" 
                   disabled={!!editingId} // Don't allow changing email for simplicity
                   value={form.email} onChange={e => setForm({...form, email: e.target.value})}
@@ -252,8 +259,9 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Access Role</label>
+                <label htmlFor="user-role" className="block text-xs text-slate-400 mb-1">Access Role</label>
                 <select 
+                  id="user-role"
                   className="input-field appearance-none bg-surface-card"
                   value={form.role} onChange={e => setForm({...form, role: e.target.value})}
                 >
@@ -263,12 +271,13 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
+                <label htmlFor="user-password" className="block text-xs text-slate-400 mb-1">
                   {editingId ? 'New Password (leave blank to keep current)' : 'Password'}
                 </label>
                 <div className="relative">
                   <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input 
+                    id="user-password"
                     type="password" minLength={6} className="input-field pl-10" 
                     required={!editingId}
                     placeholder={editingId ? "••••••••" : "Min 6 chars"}

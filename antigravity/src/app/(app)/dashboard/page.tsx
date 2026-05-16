@@ -89,27 +89,38 @@ export default function DashboardPage() {
       </div>
 
       {/* ── PRIORITY ALERTS ── */}
-      {(stats.expiring_soon > 0 || stats.low_stock_count > 0) && (
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+      {(stats.expiring_soon > 0 || stats.low_stock_count > 0 || stats.expired_count > 0) && (
+        <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-6">
+          {stats.expired_count > 0 && (
+            <div className="flex-1 min-w-[280px] glass-card p-4 border-red-600/50 bg-red-600/10 flex items-start gap-4">
+              <div className="p-3 bg-red-600/20 rounded-xl text-red-500 shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-red-500 font-bold text-lg">{stats.expired_count} Items Expired</h3>
+                <p className="text-red-500/80 text-xs mt-1">Immediate action required: Remove these items from stock.</p>
+              </div>
+            </div>
+          )}
           {stats.expiring_soon > 0 && (
-            <div className="flex-1 glass-card p-4 border-amber-500/30 bg-amber-500/10 flex items-start gap-4">
+            <div className="flex-1 min-w-[280px] glass-card p-4 border-amber-500/30 bg-amber-500/10 flex items-start gap-4">
               <div className="p-3 bg-amber-500/20 rounded-xl text-amber-400 shrink-0">
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-amber-400 font-bold text-lg">{stats.expiring_soon} Items Expiring Soon</h3>
+                <h3 className="text-amber-400 font-bold text-lg">{stats.expiring_soon} Expiring Soon</h3>
                 <p className="text-amber-400/80 text-xs mt-1">Review items expiring within 90 days to prevent stock waste.</p>
               </div>
             </div>
           )}
           {stats.low_stock_count > 0 && (
-            <div className="flex-1 glass-card p-4 border-red-500/30 bg-red-500/10 flex items-start gap-4">
-              <div className="p-3 bg-red-500/20 rounded-xl text-red-400 shrink-0">
-                <AlertTriangle className="w-6 h-6" />
+            <div className="flex-1 min-w-[280px] glass-card p-4 border-orange-500/30 bg-orange-500/10 flex items-start gap-4">
+              <div className="p-3 bg-orange-500/20 rounded-xl text-orange-400 shrink-0">
+                <PackageOpen className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-red-400 font-bold text-lg">{stats.low_stock_count} Low Stock Warnings</h3>
-                <p className="text-red-400/80 text-xs mt-1">Items have fallen below their configured safety stock threshold.</p>
+                <h3 className="text-orange-400 font-bold text-lg">{stats.low_stock_count} Low Stock</h3>
+                <p className="text-orange-400/80 text-xs mt-1">Items have fallen below their configured safety stock threshold.</p>
               </div>
             </div>
           )}
