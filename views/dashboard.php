@@ -26,7 +26,7 @@ include BASE_PATH . '/includes/sidebar.php';
             <p class="text-slate-500 text-sm md:text-base">Selamat datang di pusat kendali SiMoSoBa.</p>
         </div>
         <div class="px-6 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
-            <div class="w-2 h-2 bg-emerald rounded-full animate-ping"></div>
+            <div class="w-2 h-2 bg-emerald rounded-full animate-ping" aria-hidden="true"></div>
             <span class="text-xs font-bold text-navy uppercase tracking-widest"><?= date('l, d F Y') ?></span>
         </div>
     </div>
@@ -47,7 +47,7 @@ include BASE_PATH . '/includes/sidebar.php';
                     <p class="text-3xl font-display font-bold <?= $color ?>"><?= $val ?></p>
                 </div>
                 <div class="w-12 h-12 <?= $bg ?> rounded-2xl flex items-center justify-center <?= $color ?> text-2xl group-hover:scale-110 transition-transform">
-                    <i class="bi <?= $icon ?>"></i>
+                    <i class="bi <?= $icon ?>" aria-hidden="true"></i>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -62,7 +62,7 @@ include BASE_PATH . '/includes/sidebar.php';
                         <h2 class="font-bold text-xl text-navy">Monitoring Stok Kritis</h2>
                         <p class="text-xs text-slate-400">Daftar obat yang perlu segera dipesan ulang.</p>
                     </div>
-                    <a href="index.php?page=stok" class="text-xs font-bold text-emerald hover:underline">Lihat Semua</a>
+                    <a href="index.php?page=stok" class="text-xs font-bold text-emerald hover:underline" aria-label="Lihat semua data stok obat">Lihat Semua</a>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left min-w-[500px]">
@@ -84,7 +84,7 @@ include BASE_PATH . '/includes/sidebar.php';
                                         <span class="px-3 py-1 bg-rose-50 text-rose-500 font-bold rounded-lg text-sm"><?= $o['stok'] ?></span>
                                     </td>
                                     <td class="px-8 py-5">
-                                        <img src="<?= $qr_url ?>" class="w-10 h-10 rounded-lg shadow-sm hover:scale-150 transition-transform cursor-zoom-in">
+                                        <img src="<?= $qr_url ?>" alt="QR Code untuk obat <?= htmlspecialchars($o['nama']) ?>" class="w-10 h-10 rounded-lg shadow-sm hover:scale-150 transition-transform cursor-zoom-in">
                                     </td>
                                     <td class="px-8 py-5">
                                         <p class="text-emerald font-bold italic text-sm mb-1"><?= $prediksiModel->predictDaysRemaining($o['id'], $o['stok']) ?> Hari</p>
@@ -117,7 +117,7 @@ include BASE_PATH . '/includes/sidebar.php';
                     ?>
                         <div class="flex gap-4 relative">
                             <div class="w-10 h-10 <?= $bg ?> <?= $color ?> rounded-xl flex items-center justify-center shrink-0">
-                                <i class="bi <?= $icon ?>"></i>
+                                <i class="bi <?= $icon ?>" aria-hidden="true"></i>
                             </div>
                             <div class="space-y-1">
                                 <p class="text-sm font-bold text-navy">
@@ -134,7 +134,7 @@ include BASE_PATH . '/includes/sidebar.php';
                         <p class="text-center text-slate-400 text-sm py-10">Belum ada aktivitas.</p>
                     <?php endif; ?>
                 </div>
-                <button class="w-full mt-8 py-3 border-2 border-slate-100 text-slate-400 text-xs font-bold rounded-2xl hover:border-emerald hover:text-emerald transition-all">Lihat Semua Riwayat</button>
+                <button class="w-full mt-8 py-3 border-2 border-slate-100 text-slate-400 text-xs font-bold rounded-2xl hover:border-emerald hover:text-emerald transition-all" aria-label="Lihat semua riwayat aktivitas">Lihat Semua Riwayat</button>
             </div>
         </div>
     </div>
