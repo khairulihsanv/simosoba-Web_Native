@@ -1,2 +1,0 @@
-/** DEPRECATED: Noise removal */
-export {};
