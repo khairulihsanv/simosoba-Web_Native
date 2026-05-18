@@ -1,0 +1,5 @@
+- [x] File Cleaning & Workspace Pruning
+- [x] Backend Flow & Logic (OOP) - Implemented abstract Obat class with encapsulation, inheritance (ObatGenerik), and polymorphism (calculateNewStock, daysUntilExpired)
+- [x] Frontend Flow, CSS, & Artifact Cross-Check - Standardized CSS framework (Tailwind CDN) and consistent header/footer
+- [x] Security & Robustness - Added session hijacking protection, input sanitization (XSS prevention), prepared statements (SQL Injection prevention)
+- [x] Cloud Deployment Configuration (VERCEL & TiDB) - Configured vercel.json for Vercel PHP, updated database config to use environment variables and PDO SSL, ensured init.php loads dependencies

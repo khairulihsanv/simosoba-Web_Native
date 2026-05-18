@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="SiMoSoBa - Sistem Monitoring Stok Obat Cerdas untuk Manajemen Farmasi yang Akurat dan Efisien.">
-    <title>Dashboard SiMoSoBa — Monitoring Stok Cerdas</title>
-    
+    <title>Dashboard SiMoSoBa â€” Monitoring Stok Cerdas</title>
+
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/main.css">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -21,22 +21,22 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { 
-                        navy: '#1e293b', 
-                        emerald: '#10b981', 
+                    colors: {
+                        navy: '#1e293b',
+                        emerald: '#10b981',
                         softgrey: '#f8fafc',
                         amber: '#f59e0b',
                         rose: '#e11d48'
                     },
-                    fontFamily: { 
-                        sans: ['Inter', 'sans-serif'], 
-                        display: ['Poppins', 'sans-serif'] 
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Poppins', 'sans-serif']
                     }
                 }
             }
         }
     </script>
-    
+
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-display { font-family: 'Poppins', sans-serif; }
