@@ -3,8 +3,9 @@
  * index.php - Entry Point & Landing Page
  * Digunakan sebagai router dan tampilan utama (Landing Page)
  */
-error_reporting(0);
-@ini_set('display_errors', '0');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 header("Content-Type: text/html; charset=utf-8");
 require_once 'init.php';
 
@@ -114,7 +115,7 @@ if (in_array($page, $auth_pages)) {
         header("Location: index.php?page=login");
         exit();
     }
-    
+
     // 2. Proteksi Role (Admin Only)
     $admin_only = ['laporan', 'users', 'pengaturan'];
     if (in_array($page, $admin_only)) {
