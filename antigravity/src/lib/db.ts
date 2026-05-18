@@ -60,7 +60,7 @@ export default pool;
  * Generic query wrapper to cast rows to the expected TypeScript interface.
  * Ensures the codebase isn't polluted with `any` types.
  */
-export async function query<T>(sql: string, params?: unknown[]): Promise<T> {
+export async function query<T>(sql: string, params?: any[]): Promise<T> {
   const [rows] = await pool.execute(sql, params);
   return rows as T;
 }

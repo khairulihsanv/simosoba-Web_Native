@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import pool from '@/lib/db';
 import { signToken, setAuthCookie } from '@/lib/auth';
+import type { User } from '@/types';
 
 /**
  * src/app/api/auth/login/route.ts
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch user from database
-    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ? OR username = ?', [email, email]);
     const users = rows as (User & { password_hash: string })[];
 
     if (users.length === 0) {

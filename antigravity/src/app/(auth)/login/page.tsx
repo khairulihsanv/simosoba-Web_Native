@@ -117,8 +117,8 @@ function LoginForm() {
           {tab === 'login' ? (
             <form key="login" onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label htmlFor="login-email" className="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Email Address</label>
-                <input id="login-email" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@antigravity.io" className="input-field bg-white/5 border-white/10" />
+                <label htmlFor="login-email" className="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Email Address or Username</label>
+                <input id="login-email" type="text" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email or username..." className="input-field bg-white/5 border-white/10" />
               </div>
               <div>
                 <label htmlFor="login-password" className="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Password</label>

@@ -188,7 +188,7 @@ export default function MedicinesPage() {
                             <span className={`font-bold ${isLowStock ? 'text-red-400' : 'text-slate-200'}`}>
                               {med.stock_current} {med.unit}
                             </span>
-                            {isLowStock && <AlertTriangle className="w-4 h-4 text-red-400" title="Low Stock" />}
+                            {isLowStock && <span title="Low Stock"><AlertTriangle className="w-4 h-4 text-red-400" /></span>}
                           </div>
                           <p className="text-xs text-slate-500">Safe: {med.safety_stock}</p>
                         </td>

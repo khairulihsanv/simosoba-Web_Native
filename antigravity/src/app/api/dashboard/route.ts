@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     const rawChartData = chartRows as { month: string, revenue: number | string, cost: number | string }[];
     
     // Fill missing months to ensure a continuous 6-month view
-    const monthlyChart = [];
+    const monthlyChart: {month: string, revenue: number, cost: number, profit: number}[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setDate(1); // Set to 1st to avoid end-of-month overflow issues

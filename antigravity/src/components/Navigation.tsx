@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Pills, ArrowRightLeft, FileText, Settings, LogOut, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Pill, ArrowRightLeft, FileText, Settings, LogOut, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { AuthUser } from '@/types';
 
@@ -44,7 +44,7 @@ export default function Navigation() {
 
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Stock', icon: Pills, href: '/medicines' },
+    { label: 'Stock', icon: Pill, href: '/medicines' },
     { label: 'In/Out', icon: ArrowRightLeft, href: '/transactions' },
     { label: 'Reports', icon: FileText, href: '/reports' },
     ...(user?.role === 'superadmin' ? [{ label: 'Admin', icon: Settings, href: '/admin' }] : []),

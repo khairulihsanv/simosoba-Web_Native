@@ -7,8 +7,8 @@
  * ─────────────────────────────────────────────────────────────
  */
 
-import { useState, useEffect, FormEvent } from 'react';
-import { ArrowDownRight, ArrowUpRight, Search, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useEffect, FormEvent, useRef } from 'react';
+import { ArrowDownRight, ArrowUpRight, Search, Plus, Loader2, AlertCircle, Scan } from 'lucide-react';
 import { format } from 'date-fns';
 import type { InventoryLog, Medicine } from '@/types';
 
@@ -32,6 +32,94 @@ export default function TransactionsPage() {
     quantity: 1,
     notes: ''
   });
+
+  // Scanner State
+  const [scannerActive, setScannerActive] = useState(false);
+  const [scannerLoaded, setScannerLoaded] = useState(false);
+  const html5QrCodeRef = useRef<any>(null);
+
+  const startScanner = () => {
+    setScannerActive(true);
+    if (typeof window !== 'undefined' && !(window as any).Html5Qrcode) {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/html5-qrcode';
+      script.onload = () => {
+        setScannerLoaded(true);
+        initQrCode();
+      };
+      document.body.appendChild(script);
+    } else {
+      setScannerLoaded(true);
+      setTimeout(initQrCode, 100);
+    }
+  };
+
+  const initQrCode = () => {
+    if (typeof window === 'undefined' || !(window as any).Html5Qrcode) return;
+    try {
+      const Html5Qrcode = (window as any).Html5Qrcode;
+      const Html5QrcodeSupportedFormats = (window as any).Html5QrcodeSupportedFormats;
+      
+      const qrCode = new Html5Qrcode("reader");
+      html5QrCodeRef.current = qrCode;
+      
+      const config = { 
+        fps: 10, 
+        qrbox: { width: 200, height: 200 },
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.CODE_128
+        ]
+      };
+      
+      qrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        (decodedText: string) => {
+          stopScanner();
+          let idToSelect = decodedText;
+          if (decodedText.startsWith("OBAT:")) {
+            idToSelect = decodedText.split(":")[1];
+          }
+          const matched = medicines.find(m => String(m.id) === String(idToSelect) || m.name.toLowerCase().includes(decodedText.toLowerCase()));
+          if (matched) {
+            setForm(prev => ({ ...prev, medicine_id: String(matched.id) }));
+          } else {
+            alert(`Medicine with code "${decodedText}" not found.`);
+          }
+        },
+        () => { /* scanning... */ }
+      ).catch((err: any) => console.error("Error starting scanner:", err));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const stopScanner = () => {
+    setScannerActive(false);
+    if (html5QrCodeRef.current) {
+      html5QrCodeRef.current.stop().then(() => {
+        html5QrCodeRef.current = null;
+      }).catch((e: any) => console.error(e));
+    }
+  };
+
+  // Clean up scanner on unmount
+  useEffect(() => {
+    return () => {
+      if (html5QrCodeRef.current) {
+        html5QrCodeRef.current.stop().catch((e: any) => console.error(e));
+      }
+    };
+  }, []);
+
+  const handleCloseModal = () => {
+    stopScanner();
+    setIsModalOpen(false);
+    setForm({ medicine_id: '', type: 'out', quantity: 1, notes: '' });
+  };
 
   useEffect(() => {
     loadTransactions(page);
@@ -185,7 +273,7 @@ export default function TransactionsPage() {
       {/* ── Modal ────────────────────────────────────────────── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseModal} />
           
           <div className="relative glass-card w-full max-w-md p-6 shadow-2xl">
             <h2 className="text-xl font-bold mb-4">Record Stock Movement</h2>
@@ -224,7 +312,30 @@ export default function TransactionsPage() {
               </div>
 
               <div>
-                <label htmlFor="tx-medicine" className="block text-xs text-slate-400 mb-1">Medicine *</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label htmlFor="tx-medicine" className="block text-xs text-slate-400">Medicine *</label>
+                  <button
+                    type="button"
+                    onClick={startScanner}
+                    className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 font-bold bg-brand-500/10 px-2.5 py-1 rounded-lg border border-brand-500/20 transition-all"
+                  >
+                    <Scan className="w-3.5 h-3.5" /> Scan QR/Barcode
+                  </button>
+                </div>
+
+                {scannerActive && (
+                  <div className="mb-4 p-3 bg-black/40 border border-white/10 rounded-xl">
+                    <div id="reader" className="w-full overflow-hidden rounded-lg bg-black"></div>
+                    <button
+                      type="button"
+                      onClick={stopScanner}
+                      className="btn-ghost w-full py-1.5 text-xs mt-2 border border-white/10"
+                    >
+                      Close Scanner
+                    </button>
+                  </div>
+                )}
+
                 <select 
                   id="tx-medicine"
                   required 
@@ -265,7 +376,7 @@ export default function TransactionsPage() {
               </div>
 
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Cancel</button>
+                <button type="button" onClick={handleCloseModal} className="btn-ghost">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="btn-primary">
                   {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Confirm
