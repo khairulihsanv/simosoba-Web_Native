@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Neo-Brutalism/Promed UI Customizations */
+* {
+  border-color: #000;
+}
+
+body {
+  @apply bg-white;
+}
+
+/* Custom animations for framer motion */
+.motion-animate {
+  @animate-in fade-in zoom-in 90ms;
+}
+
+/* Glassmorphism effect */
+.glassmorphism {
+  @apply bg-white/20 backdrop-blur-lg border-2 border-black;
+}
+
+/* Neo-Brutalism offset container */
+.neo-brutalism-offset {
+  @apply relative;
+}
+
+.neo-brutalism-offset::before {
+  content: '';
+  @apply absolute -top-4 -left-4 w-full h-full bg-white border-2 border-black;
+}
+
+/* Sunset Gradient accents */
+.sunset-gradient {
+  @apply bg-gradient-to-r from-orange-500 via-red-500 to-pink-500;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply px-6 py-3 font-semibold text-black border-2 border-black 
+         hover:bg-white hover:text-black transition-all duration-300 relative;
+}
+
+.btn-primary::before {
+  content: '';
+  @apply absolute -top-2 -left-2 w-full h-full bg-white border-2 border-black;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 font-semibold text-black border-2 border-black 
+         bg-white hover:bg-black hover:text-white transition-all duration-300 relative;
+}
+
+.btn-secondary::before {
+  content: '';
+  @apply absolute -top-2 -left-2 w-full h-full bg-white border-2 border-black;
+}
+
+/* Input styles */
+.input-primary {
+  @apply border-2 border-black p-2 w-full rounded-none 
+         focus:outline-none focus:ring-2 focus:ring-black;
+}
+
+/* Table styles */
+.table-primary {
+  @apply min-w-full border-separate border-spacing-0;
+}
+
+.table-primary th {
+  @apply px-4 py-3 text-left text-black font-semibold border-b-2 border-black;
+}
+
+.table-primary td {
+  @apply px-4 py-3 text-black border-b border-black;
+}
+
+.table-primary tr:hover {
+  @apply bg-gray-50;
+}
+
+/* Alert styles */
+.alert-primary {
+  @apply border-2 border-black p-4 relative;
+}
+
+.alert-primary::before {
+  content: '';
+  @apply absolute -top-2 -left-2 w-full h-full bg-white border-2 border-black;
+}
+
+/* Badge styles */
+.badge-primary {
+  @apply px-2 py-1 text-xs font-medium rounded;
+}
+
+.badge-superadmin {
+  @apply bg-red-100 text-red-800;
+}
+
+.badge-pharmacist {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.badge-stockmanager {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-inspector {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.badge-active {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-inactive {
+  @apply bg-red-100 text-red-800;
+}
