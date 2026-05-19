@@ -59,7 +59,7 @@ require_once BASE_PATH . '/config/database.php';
  */
 $auth = new Auth();
 $currentUser = new User($auth->me()); // Inisialisasi User Object
-$obatModel = new Obat($pdo);
+$obatModel = new ObatGenerik($pdo);
 $prediksiModel = new Prediksi($pdo);
 
 /**
