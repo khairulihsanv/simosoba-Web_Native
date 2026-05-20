@@ -46,4 +46,4 @@
         .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
-<body class="bg-softgrey text-navy antialiased">
+<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-navy antialiased">
