@@ -71,8 +71,8 @@ include BASE_PATH . '/includes/sidebar.php';
             </div>
 
             <div class="view-toggles">
-                <button class="view-btn active"><i class="bi bi-grid-fill"></i></button>
-                <button class="view-btn"><i class="bi bi-list-ul"></i></button>
+                <button class="view-btn active" type="button" data-view="grid" onclick="setInventoryView('grid')" title="Grid view"><i class="bi bi-grid-fill"></i></button>
+                <button class="view-btn" type="button" data-view="list" onclick="setInventoryView('list')" title="List view"><i class="bi bi-list-ul"></i></button>
             </div>
         </div>
 
@@ -80,7 +80,9 @@ include BASE_PATH . '/includes/sidebar.php';
         <div class="med-grid">
             <?php foreach($all_obat as $o): 
                 $stok = $o['stok'] ?? 0;
-                $min_stok = $o['stok_minimum'] ?? 40; // fallback if not exist
+                $min_stok = $o['stok_min'] ?? ($o['stok_minimum'] ?? 40);
+                $expiryRaw = $o['exp_date'] ?? ($o['kadaluarsa'] ?? '');
+                $expiryDisplay = $expiryRaw ? date('M Y', strtotime($expiryRaw)) : 'Aug 2026';
                 
                 // Status Logic
                 if ($stok <= 0) {
@@ -120,7 +122,7 @@ include BASE_PATH . '/includes/sidebar.php';
                         <span class="status-dot"></span> <?= $status ?>
                     </div>
                     <div class="med-footer-right">
-                        <span class="med-date"><i class="bi bi-calendar3"></i> Aug 2026</span>
+                        <span class="med-date"><i class="bi bi-calendar3"></i> <?= htmlspecialchars($expiryDisplay) ?></span>
                         <span class="med-price">$<?= $price ?></span>
                     </div>
                 </div>
@@ -427,6 +429,16 @@ function closeAddModal() {
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+}
+
+function setInventoryView(view) {
+    const grid = document.querySelector('.med-grid');
+    if (!grid) return;
+
+    grid.classList.toggle('list-view', view === 'list');
+    document.querySelectorAll('.view-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+    });
 }
 
 function startScanner() {

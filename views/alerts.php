@@ -10,7 +10,7 @@ $alerts = [];
 
 foreach ($all_obat as $o) {
     $stok = $o['stok'] ?? 0;
-    $min_stok = $o['stok_minimum'] ?? 40;
+    $min_stok = $o['stok_min'] ?? ($o['stok_minimum'] ?? 40);
     $nama = $o['nama'] ?? 'Unknown';
 
     if ($stok <= 0) {

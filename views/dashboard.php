@@ -29,7 +29,7 @@ include BASE_PATH . '/includes/sidebar.php';
         <div class="topbar-actions">
             <div class="search-box">
                 <i class="bi bi-search"></i>
-                <input type="text" placeholder="Cari obat..." id="global-search">
+                <input type="text" placeholder="Search medications..." id="global-search">
             </div>
             <button class="icon-btn" @click="toggleTheme()" title="Toggle Dark Mode">
                 <i class="bi" :class="isDark ? 'bi-sun-fill' : 'bi-moon-stars-fill'"></i>
@@ -51,8 +51,9 @@ include BASE_PATH . '/includes/sidebar.php';
         <div class="alerts-stack" id="alerts-container">
             <?php foreach(array_slice($critical_stock, 0, 3) as $i => $o):
                 $rek = $prediksiModel->getSeasonalRecommendation($o['kategori'], $o['stok']);
-                $msg = "Stok level kritis pada " . $o['stok'] . " unit. Minimum threshold adalah " . ($o['stok_minimum'] ?? 40) . " unit.";
-                if ($rek !== 'Normal') $msg = $rek . " — " . $msg;
+                $minStok = $o['stok_min'] ?? ($o['stok_minimum'] ?? 40);
+                $msg = "Stock level at " . $o['stok'] . " units. Minimum threshold is " . $minStok . " units.";
+                if ($rek !== 'Normal') $msg = $rek . " - " . $msg;
             ?>
             <div class="alert-item" id="alert-<?= $i ?>">
                 <div class="alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
@@ -73,8 +74,8 @@ include BASE_PATH . '/includes/sidebar.php';
             <div class="stat-card">
                 <div class="stat-icon blue"><i class="bi bi-capsule"></i></div>
                 <div class="stat-value"><?= $stats['total'] ?? 0 ?></div>
-                <div class="stat-label">Total Obat</div>
-                <div class="stat-sub">Dalam inventaris</div>
+                <div class="stat-label">Total Medications</div>
+                <div class="stat-sub">In inventory</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon green"><i class="bi bi-currency-dollar"></i></div>
@@ -82,23 +83,23 @@ include BASE_PATH . '/includes/sidebar.php';
                     <?php
                     $total_val = $pdo->query("SELECT SUM(stok * harga) as total FROM obat")->fetchColumn();
                     $tv = $total_val ?? 0;
-                    echo $tv >= 1000000 ? 'Rp' . number_format($tv/1000000, 1) . 'jt' : 'Rp' . number_format($tv/1000, 1) . 'k';
+                    echo $tv >= 1000000 ? '$' . number_format($tv/1000000, 1) . 'M' : '$' . number_format($tv/1000, 1) . 'k';
                     ?>
                 </div>
-                <div class="stat-label">Nilai Stok</div>
-                <div class="stat-sub">Nilai retail</div>
+                <div class="stat-label">Stock Value</div>
+                <div class="stat-sub">Retail value</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon amber"><i class="bi bi-exclamation-triangle"></i></div>
                 <div class="stat-value"><?= ($stats['kritis'] ?? 0) + ($stats['habis'] ?? 0) ?></div>
-                <div class="stat-label">Kritis / Habis</div>
-                <div class="stat-sub">Perlu perhatian</div>
+                <div class="stat-label">Low / Out of Stock</div>
+                <div class="stat-sub">Need attention</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon red"><i class="bi bi-clock-history"></i></div>
                 <div class="stat-value"><?= $stats['expired'] ?? 0 ?></div>
-                <div class="stat-label">Kadaluarsa</div>
-                <div class="stat-sub">Dalam 30 hari</div>
+                <div class="stat-label">Expiring Soon</div>
+                <div class="stat-sub">Within 30 days</div>
             </div>
         </div>
 
@@ -108,8 +109,8 @@ include BASE_PATH . '/includes/sidebar.php';
             <div class="card chart-card">
                 <div class="card-header">
                     <div>
-                        <div class="card-title">Pergerakan Stok</div>
-                        <div class="card-sub">7 hari terakhir</div>
+                        <div class="card-title">Stock Movement</div>
+                        <div class="card-sub">Last 7 days</div>
                     </div>
                 </div>
                 <div class="chart-wrap">
@@ -121,8 +122,8 @@ include BASE_PATH . '/includes/sidebar.php';
             <div class="card chart-card-sm">
                 <div class="card-header">
                     <div>
-                        <div class="card-title">Per Kategori</div>
-                        <div class="card-sub">Top 5 kategori</div>
+                        <div class="card-title">By Category</div>
+                        <div class="card-sub">Top 5 categories</div>
                     </div>
                 </div>
                 <div class="chart-wrap">
@@ -134,14 +135,14 @@ include BASE_PATH . '/includes/sidebar.php';
         <!-- ===== RECENT TRANSACTIONS ===== -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Transaksi Terbaru</div>
-                <a href="index.php?page=mutasi" class="view-all-btn">Lihat Semua</a>
+                <div class="card-title">Recent Transactions</div>
+                <a href="index.php?page=mutasi" class="view-all-btn">View All</a>
             </div>
             <div class="transactions-list">
                 <?php if (empty($recent_activity)): ?>
                     <div class="empty-state">
                         <i class="bi bi-inbox"></i>
-                        <p>Belum ada transaksi.</p>
+                        <p>No transactions yet.</p>
                     </div>
                 <?php else: ?>
                 <?php foreach($recent_activity as $act):
@@ -159,7 +160,7 @@ include BASE_PATH . '/includes/sidebar.php';
                     <div class="txn-right">
                         <span class="txn-qty"><?= $act['jumlah'] ?? 0 ?> unit</span>
                         <?php if ($harga_total > 0): ?>
-                        <span class="txn-price">Rp<?= number_format($harga_total, 0, ',', '.') ?></span>
+                        <span class="txn-price">$<?= number_format($harga_total, 2, '.', ',') ?></span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -510,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ---- Stock Movement Line Chart ----
     const stockCtx = document.getElementById('stockChart').getContext('2d');
-    const days = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+    const days = ['Thu','Fri','Sat','Sun','Mon','Tue','Wed'];
     
     // Data dari PHP (7 hari terakhir — generate dari DB jika ada, fallback ke dummy)
     <?php
