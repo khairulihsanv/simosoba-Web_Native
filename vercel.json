@@ -2,8 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/package.json",
-      "use": "@vercel/next"
+      "src": "*.php",
+      "use": "vercel-php@0.6.2"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/css/(.*)",
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.php"
     }
   ]
 }
