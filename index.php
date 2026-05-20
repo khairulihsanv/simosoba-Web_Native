@@ -108,7 +108,7 @@ if ($page === 'landing') {
 }
 
 // Route Logic untuk halaman lainnya
-$auth_pages = ['dashboard', 'stok', 'laporan', 'users', 'pengaturan', 'mutasi'];
+$auth_pages = ['dashboard', 'stok', 'laporan', 'users', 'pengaturan', 'mutasi', 'suppliers', 'alerts'];
 if (in_array($page, $auth_pages)) {
     // 1. Wajib Login
     if (!isset($_SESSION['user_id'])) {
