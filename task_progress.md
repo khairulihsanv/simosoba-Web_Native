@@ -1,0 +1,13 @@
+- [x] Analyze requirements and existing project structure
+- [x] Set up Tailwind CSS and Lucide Icons if not already configured
+- [x] Create/update sidebar.php with dark theme and navigation items
+- [x] Create/update header.php with dynamic title, search bar, and user controls
+- [x] Implement Dashboard view with alert banners, summary cards, charts, and recent transactions
+- [x] Implement Inventory view with medication cards, filters, and add medication modal
+- [x] Implement Transactions view with filterable table
+- [x] Implement Suppliers view with supplier cards and add supplier modal
+- [x] Implement Alerts view with detailed alert list and actions
+- [x] Implement Reports view with summary widgets and charts
+- [x] Add interactive state logic for modals, tab switching, and user interactions
+- [x] Ensure responsive design and proper hover/focus states
+- [ ] Test all pages and interactions

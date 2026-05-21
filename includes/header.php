@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- CDN Frameworks -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Alpine.js -->
@@ -54,10 +54,10 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-        
+
         /* Responsive Table fix */
         .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        
+
         /* Glassmorphism utility */
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
         .dark .glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.05); }
@@ -88,5 +88,36 @@
             }, 10);
         });
     </script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.nextTick(() => {
+                lucide.createIcons();
+            });
+        });
+        // Also run on load
+        lucide.createIcons();
+    </script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-dark-900 dark:via-dark-900 dark:to-slate-900 text-navy dark:text-dark-text antialiased transition-colors duration-300">
+    <!-- Topbar -->
+    <header class="topbar">
+        <h1 class="topbar-title" id="page-title">Dashboard</h1>
+        <div class="topbar-actions">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" placeholder="Search medications..." id="global-search">
+            </div>
+            <button class="icon-btn" @click="toggleTheme()" title="Toggle Dark Mode">
+                <i data-lucide="moon"></i>
+            </button>
+            <div class="notif-btn relative">
+                <i data-lucide="bell"></i>
+                <span class="notif-badge absolute -top-1 -right-1" id="notification-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar and Main Content -->
+    <div class="flex h-screen">
+        <?php include BASE_PATH . '/includes/sidebar.php'; ?>
+        <main class="main-content flex-1 overflow-y-auto">
