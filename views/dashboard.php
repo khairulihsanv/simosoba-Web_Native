@@ -2,6 +2,8 @@
 // views/dashboard.php
 if (!defined('BASE_PATH')) die('Access Denied');
 
+$pageTitle = 'Dashboard';
+
 $user = me();
 
 function dash_has_column(PDO $pdo, string $table, string $column): bool {
@@ -269,7 +271,8 @@ if (max($stockIn) === 0 && max($stockOut) === 0) {
                 <div class="txn-row">
                     <div class="txn-icon <?= $isOut ? 'out' : 'in' ?>"><?= $isOut ? '-' : '+' ?></div>
                     <div class="txn-info">
-                        <div class="txn-name"><?= htmlspecialchars($act['nama_obat'] ?? 'Medication') ?></div>
+                        <div class="txn-name"><?= htmlspecialchars($act['nama_obat'] ?? 'Medication') ?></div
+>
                         <div class="txn-meta"><?= $isOut ? 'Stock Out' : 'Stock In' ?> &middot; <?= dash_date($act['created_at'] ?? 'now') ?></div>
                     </div>
                     <div class="txn-right">

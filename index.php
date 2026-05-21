@@ -146,6 +146,17 @@ if (in_array($page, $auth_pages)) {
         $auth->requireRole(['super_admin', 'admin_staff']);
     }
 
+    // Set page title
+    $titleMap = [
+        'dashboard' => 'Dashboard',
+        'stok' => 'Inventory',
+        'mutasi' => 'Transactions',
+        'suppliers' => 'Suppliers',
+        'alerts' => 'Alerts',
+        'laporan' => 'Reports',
+    ];
+    $pageTitle = $titleMap[$page] ?? ucfirst($page);
+
     // Include the app layout: header, view, footer
     include BASE_PATH . '/includes/header.php';
     $view_file = BASE_PATH . '/views/' . $page . '.php';

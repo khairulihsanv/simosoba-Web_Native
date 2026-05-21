@@ -2,6 +2,8 @@
 // views/mutasi.php
 if (!defined('BASE_PATH')) die('Access Denied');
 
+$pageTitle = 'Transactions';
+
 $msg = '';
 $msg_type = '';
 

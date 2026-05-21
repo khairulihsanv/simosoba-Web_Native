@@ -101,7 +101,7 @@
 <body class="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-dark-900 dark:via-dark-900 dark:to-slate-900 text-navy dark:text-dark-text antialiased transition-colors duration-300">
     <!-- Topbar -->
     <header class="topbar">
-        <h1 class="topbar-title" id="page-title">Dashboard</h1>
+        <h1 class="topbar-title" id="page-title"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Dashboard' ?></h1>
         <div class="topbar-actions">
             <div class="search-box">
                 <i data-lucide="search"></i>
