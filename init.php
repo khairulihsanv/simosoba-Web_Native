@@ -48,7 +48,9 @@ if (PHP_SAPI !== 'cli') {
 // 2. Session Start & Cache Control (Security)
 if (session_status() === PHP_SESSION_NONE) {
     if (PHP_SAPI !== 'cli') {
-        session_save_path('/tmp');
+        if (DIRECTORY_SEPARATOR === '/' && is_dir('/tmp') && is_writable('/tmp')) {
+            session_save_path('/tmp');
+        }
         // Prevent Back Button after logout
         header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
         header("Cache-Control: post-check=0, pre-check=0", false);

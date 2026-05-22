@@ -14,14 +14,21 @@ $action = $_POST['action'] ?? '';
 // ── REGISTER ─────────────────────────────────────────────────
 if ($action === 'register') {
     $nama     = trim($_POST['nama'] ?? '');
+    $username = strtolower(trim($_POST['username'] ?? ''));
     $email    = strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
     $confirm  = $_POST['confirm_password'] ?? '';
-    $role     = $_POST['role'] ?? 'user';
+    $role     = 'user'; // default role, managed by super_admin later
 
     // Validate
-    if (!$nama || !$email || !$password || !$confirm) {
+    if (!$nama || !$username || !$email || !$password || !$confirm) {
         $_SESSION['login_error'] = 'Semua field wajib diisi.';
+        header('Location: ' . BASE_URL . '/?page=login&tab=register');
+        exit();
+    }
+
+    if (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $username)) {
+        $_SESSION['login_error'] = 'Username hanya boleh huruf, angka, underscore (3-30 karakter).';
         header('Location: ' . BASE_URL . '/?page=login&tab=register');
         exit();
     }
@@ -44,15 +51,18 @@ if ($action === 'register') {
         exit();
     }
 
-    // Sanitize role
-    $allowedRoles = ['user', 'admin_staff', 'super_admin'];
-    if (!in_array($role, $allowedRoles)) {
-        $role = 'user';
-    }
-
     try {
         // Check if table exists, create if not
         ensureUsersTable($pdo);
+
+        // Check duplicate username
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        if ($stmt->fetch()) {
+            $_SESSION['login_error'] = 'Username sudah digunakan.';
+            header('Location: ' . BASE_URL . '/?page=login&tab=register');
+            exit();
+        }
 
         // Check duplicate email
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
@@ -63,10 +73,13 @@ if ($action === 'register') {
             exit();
         }
 
-        // Insert user
+        // Insert user (generate next ID manually as TiDB auto_increment is not configured on this existing table)
+        $stmtId = $pdo->query("SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM users");
+        $nextId = (int)$stmtId->fetch()['next_id'];
+
         $hash = password_hash($password, PASSWORD_BCRYPT);
-        $stmt = $pdo->prepare("INSERT INTO users (nama, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->execute([$nama, $email, $hash, $role]);
+        $stmt = $pdo->prepare("INSERT INTO users (id, nama, username, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->execute([$nextId, $nama, $username, $email, $hash, $role]);
 
         $_SESSION['login_success'] = 'Akun berhasil dibuat! Silakan login.';
         header('Location: ' . BASE_URL . '/?page=login&tab=login');
@@ -81,11 +94,11 @@ if ($action === 'register') {
 
 // ── LOGIN ─────────────────────────────────────────────────────
 if ($action === 'login') {
-    $email    = strtolower(trim($_POST['email'] ?? ''));
+    $username = strtolower(trim($_POST['username'] ?? ''));
     $password = $_POST['password'] ?? '';
 
-    if (!$email || !$password) {
-        $_SESSION['login_error'] = 'Email dan password wajib diisi.';
+    if (!$username || !$password) {
+        $_SESSION['login_error'] = 'Username dan password wajib diisi.';
         header('Location: ' . BASE_URL . '/?page=login');
         exit();
     }
@@ -93,12 +106,13 @@ if ($action === 'login') {
     try {
         ensureUsersTable($pdo);
 
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
-        $stmt->execute([$email]);
+        // Support login by username or email for flexibility
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1");
+        $stmt->execute([$username, $username]);
         $user = $stmt->fetch();
 
         if (!$user || !password_verify($password, $user['password'])) {
-            $_SESSION['login_error'] = 'Email atau password salah.';
+            $_SESSION['login_error'] = 'Username atau password salah.';
             header('Location: ' . BASE_URL . '/?page=login');
             exit();
         }
@@ -132,18 +146,42 @@ function ensureUsersTable(PDO $pdo): void {
     if ($checked) return;
     $checked = true;
 
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS users (
-            id          INT AUTO_INCREMENT PRIMARY KEY,
-            nama        VARCHAR(100) NOT NULL,
-            email       VARCHAR(120) NOT NULL UNIQUE,
-            password    VARCHAR(255) NOT NULL,
-            role        ENUM('user','admin_staff','super_admin') DEFAULT 'user',
-            divisi      VARCHAR(80)  DEFAULT '',
-            remember_token VARCHAR(128) DEFAULT NULL,
-            created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
-            updated_at  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_email (email)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
+    try {
+        $tableExists = false;
+        $stmt = $pdo->query("SHOW TABLES LIKE 'users'");
+        if ($stmt->fetch()) {
+            $tableExists = true;
+        }
+
+        if (!$tableExists) {
+            $pdo->exec("
+                CREATE TABLE users (
+                    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    nama        VARCHAR(100) NOT NULL,
+                    username    VARCHAR(50) NOT NULL UNIQUE,
+                    email       VARCHAR(120) NOT NULL UNIQUE,
+                    password    VARCHAR(255) NOT NULL,
+                    role        VARCHAR(50) DEFAULT 'user',
+                    divisi      VARCHAR(80)  DEFAULT '',
+                    remember_token VARCHAR(128) DEFAULT NULL,
+                    created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+                    updated_at  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_username (username),
+                    INDEX idx_email (email)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+        }
+    } catch (Throwable $e) {
+        // Fallback or ignore error
+    }
+
+    // Add username column if table exists but doesn't have it
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'username'");
+        if (!$stmt->fetch()) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN username VARCHAR(50) NOT NULL UNIQUE AFTER nama");
+        }
+    } catch (Throwable $e) {
+        // Ignore column addition error if it fails
+    }
 }

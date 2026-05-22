@@ -1,3 +1,9 @@
+<?php
+if (!defined('BASE_PATH')) {
+    header('Location: ../index.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
 <head>
@@ -607,7 +613,7 @@
             Bergabung dengan ratusan apotek yang sudah menggunakan SiMoSoBa untuk efisiensi operasional yang lebih tinggi.
         </p>
         <div class="cta-btns">
-            <a href="<?= BASE_URL ?>/?page=login" class="btn-hero-primary" aria-label="Create account">
+            <a href="<?= BASE_URL ?>/?page=login&tab=register" class="btn-hero-primary" aria-label="Create account">
                 <i class="bi bi-person-plus"></i>
                 Daftar Sekarang
             </a>

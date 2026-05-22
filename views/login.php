@@ -1,5 +1,9 @@
 <?php
 // views/login.php
+if (!defined('BASE_PATH')) {
+    header('Location: ../index.php?page=login');
+    exit();
+}
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
     header('Location: ' . BASE_URL . '/?page=dashboard');
@@ -358,12 +362,12 @@ unset($_SESSION['login_error'], $_SESSION['login_success']);
                         <input type="hidden" name="action" value="login">
 
                         <div class="form-group">
-                            <label class="form-label" for="login-email">Email</label>
+                            <label class="form-label" for="login-username">Username</label>
                             <div class="auth-input-wrap">
-                                <i class="bi bi-envelope auth-input-icon" aria-hidden="true"></i>
-                                <input type="email" id="login-email" name="email"
-                                       class="auth-input" placeholder="nama@email.com"
-                                       required autocomplete="email" aria-required="true">
+                                <i class="bi bi-person auth-input-icon" aria-hidden="true"></i>
+                                <input type="text" id="login-username" name="username"
+                                       class="auth-input" placeholder="Masukkan username"
+                                       required autocomplete="username" aria-required="true">
                             </div>
                         </div>
 
@@ -412,6 +416,15 @@ unset($_SESSION['login_error'], $_SESSION['login_success']);
                                        required autocomplete="name" aria-required="true">
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-username">Username <span class="req">*</span></label>
+                            <div class="auth-input-wrap">
+                                <i class="bi bi-person-badge auth-input-icon" aria-hidden="true"></i>
+                                <input type="text" id="reg-username" name="username"
+                                       class="auth-input" placeholder="Buat username Anda"
+                                       required autocomplete="username" aria-required="true">
+                            </div>
+                        </div>
 
                         <div class="form-group">
                             <label class="form-label" for="reg-email">Email <span class="req">*</span></label>
@@ -448,17 +461,7 @@ unset($_SESSION['login_error'], $_SESSION['login_success']);
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="reg-role">Role</label>
-                            <div class="auth-input-wrap">
-                                <i class="bi bi-shield auth-input-icon" aria-hidden="true"></i>
-                                <select id="reg-role" name="role" class="auth-select">
-                                    <option value="user">User (Operator)</option>
-                                    <option value="admin_staff">Admin Staff</option>
-                                    <option value="super_admin">Super Admin</option>
-                                </select>
-                            </div>
-                        </div>
+
 
                         <button type="submit" class="auth-btn" id="register-btn">
                             <i class="bi bi-person-check"></i>
