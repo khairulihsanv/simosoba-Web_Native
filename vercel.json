@@ -4,6 +4,14 @@
     {
       "src": "**/*.php",
       "use": "vercel-php@0.6.2"
+    },
+    {
+      "src": "css/main.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/login_illustration.png",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
