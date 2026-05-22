@@ -19,6 +19,6 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-header("Location: " . BASE_URL . "/index.php?page=login");
+header("Location: " . BASE_URL . "/?page=login");
 exit();
 ?>
