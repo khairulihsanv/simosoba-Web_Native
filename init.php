@@ -21,10 +21,12 @@ if (!defined('BASE_PATH')) {
 
 /* ── 2. BASE_URL (Vercel-aware + localhost subfolder) ────────── */
 $host    = $_SERVER['HTTP_HOST'] ?? '';
+$isLocal = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false || strpos($host, '[::1]') !== false);
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
          || (($_SERVER['SERVER_PORT'] ?? 80) == 443)
          || (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-             && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+             && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+         || !$isLocal; // Force HTTPS on production/Vercel to prevent Mixed Content blocks
 $protocol = $isHttps ? 'https://' : 'http://';
 $base_url = $protocol . $host;
 

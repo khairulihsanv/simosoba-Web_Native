@@ -14,7 +14,7 @@ $page = $_GET['page'] ?? '';
 
 // Default page
 if (empty($page)) {
-    $page = isset($_SESSION['user_id']) ? 'dashboard' : 'landing';
+    $page = 'landing';
 }
 
 // Case: Logout

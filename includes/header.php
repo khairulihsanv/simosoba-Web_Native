@@ -42,7 +42,7 @@
 <div id="toast-container"></div>
 
 <!-- Mobile Overlay -->
-<div id="sidebar-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49;backdrop-filter:blur(2px);" onclick="closeSidebar()"></div>
+<div id="sidebar-overlay" class="hidden" onclick="closeSidebar()"></div>
 
 <div class="app-shell">
 

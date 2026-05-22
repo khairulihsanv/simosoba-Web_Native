@@ -1784,3 +1784,15 @@ body.page-enter {
   z-index: 1;
   flex-shrink: 0;
 }
+
+#sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  z-index: 49;
+  backdrop-filter: blur(2px);
+  display: block;
+}
+#sidebar-overlay.hidden {
+  display: none !important;
+}
