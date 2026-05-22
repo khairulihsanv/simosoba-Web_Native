@@ -1,88 +1,87 @@
 <?php
 /**
  * init.php - Konfigurasi Inti Aplikasi
- * Memuat semua dependency dan konfigurasi dasar.
+ *
+ * CRITICAL ORDER:
+ *   1. BASE_PATH + BASE_URL  (no deps)
+ *   2. Autoloader            (needed by DbSession)
+ *   3. Database ($pdo)       (needed by DbSession)
+ *   4. Session ini_set       (must be BEFORE session_start)
+ *   5. Register DbSession    (must be BEFORE session_start)
+ *   6. session_start()
+ *   7. Auth instance + helpers
  */
-// Enable errors for debugging (prevents “acak-acak” without knowing the real cause)
+
 error_reporting(E_ALL);
 @ini_set('display_errors', '1');
 
-
-// 1. Path Standardization
+/* ── 1. PATH ─────────────────────────────────────────── */
 if (!defined('BASE_PATH')) {
     define('BASE_PATH', __DIR__);
 }
 
-// 1.1 Base URL Detection (Robust Vercel & Localhost)
-// On Vercel, everything is HTTPS and host is already the correct domain (vercel.app / custom domain).
-$host = $_SERVER['HTTP_HOST'] ?? '';
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
-    || ($_SERVER['SERVER_PORT'] ?? 80) == 443
-    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+/* ── 2. BASE_URL (Vercel-aware + localhost subfolder) ── */
+$host     = $_SERVER['HTTP_HOST'] ?? '';
+$isHttps  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+          || (($_SERVER['SERVER_PORT'] ?? 80) == 443)
+          || (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+              && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
 $protocol = $isHttps ? 'https://' : 'http://';
-
 $base_url = $protocol . $host;
 
 if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-    // Deteksi subfolder secara otomatis di localhost
     $script_dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-    // Jika kita di dalam folder api/ atau actions/, ambil parent-nya
     if (strpos($script_dir, '/api') !== false || strpos($script_dir, '/actions') !== false) {
         $base_url .= str_replace(['/api', '/actions'], '', $script_dir);
     } else {
         $base_url .= ($script_dir === '/') ? '' : $script_dir;
     }
 }
-
 define('BASE_URL', rtrim($base_url, '/'));
 
-// 1.2 Session cookie settings for Vercel/HTTPS
-if (PHP_SAPI !== 'cli') {
-    ini_set('session.cookie_httponly', '1');
-    ini_set('session.cookie_samesite', 'Lax');
-
-    // Only mark Secure when we are on HTTPS (Vercel)
-    $secure = ($protocol === 'https://') ? '1' : '0';
-    ini_set('session.cookie_secure', (string)$secure);
-}
-
-
-// 2. Session Start & Cache Control (Security)
-if (session_status() === PHP_SESSION_NONE) {
-    if (PHP_SAPI !== 'cli') {
-        if (DIRECTORY_SEPARATOR === '/' && is_dir('/tmp') && is_writable('/tmp')) {
-            session_save_path('/tmp');
-        }
-        // Prevent Back Button after logout
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-    }
-    session_start();
-}
-
-// 3. Global Autoloading for Classes
+/* ── 3. AUTOLOADER ───────────────────────────────────── */
 spl_autoload_register(function (string $class): void {
-    $file = BASE_PATH . "/classes/" . str_replace('\\', '/', $class) . ".php";
+    $file = BASE_PATH . '/classes/' . str_replace('\\', '/', $class) . '.php';
     if (file_exists($file)) {
         require_once $file;
     }
 });
 
-// 4. Database Connection
+/* ── 4. DATABASE ($pdo) ──────────────────────────────── */
 require_once BASE_PATH . '/config/database.php';
-// $pdo is provided by config/database.php
+// $pdo is now available
 
-/**
- * 5. Global Instance Sharing (Dependency Injection)
- * Objek ini akan digunakan di seluruh aplikasi untuk mengurangi redundansi.
- */
+/* ── 5. SESSION SETTINGS (before session_start!) ─────── */
+if (PHP_SAPI !== 'cli') {
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.cookie_path', '/');        // IMPORTANT: '/' so cookie works in subdirs
+    $secure = ($protocol === 'https://') ? '1' : '0';
+    ini_set('session.cookie_secure', $secure);
+
+    /* ── 6. REGISTER DB SESSION HANDLER ──────────────── */
+    // File sessions don't work on Vercel (ephemeral /tmp per cold start).
+    // Storing sessions in TiDB makes them survive across serverless invocations.
+    if (!empty($pdo)) {
+        $dbSession = new DbSession($pdo);
+        session_set_save_handler($dbSession, true);
+    }
+}
+
+/* ── 7. START SESSION ────────────────────────────────── */
+if (session_status() === PHP_SESSION_NONE) {
+    if (PHP_SAPI !== 'cli') {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
+    }
+    session_start();
+}
+
+/* ── 8. AUTH INSTANCE ────────────────────────────────── */
 $auth = new Auth();
 
-/**
- * Helper Global (Opsional: Jika user masih ingin menggunakan fungsi standalone)
- * Namun disarankan memanggil via $auth->method()
- */
+/* ── 9. GLOBAL HELPER FUNCTIONS ─────────────────────── */
 if (!function_exists('me')) {
     function me(): array { global $auth; return $auth->me(); }
 }
@@ -99,14 +98,10 @@ if (!function_exists('canManageObat')) {
     function canManageObat(): bool { global $auth; return $auth->canManageObat(); }
 }
 
-/**
- * QR Code Helper (Using Google Charts API for serverless compatibility)
- */
+/* ── 10. QR CODE HELPER (Google Charts — serverless safe) ── */
 if (!function_exists('generateQR')) {
     function generateQR(string $data, string $filename): string {
-        $url = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . urlencode($data) . "&choe=UTF-8";
-        // Vercel read-only fix: Return the external URL directly.
-        return $url;
+        return 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl='
+             . urlencode($data) . '&choe=UTF-8';
     }
 }
-?>

@@ -1,183 +1,177 @@
 <?php
 /**
  * api/login.php – Login & Register Handler
- * Handles both login and register POST requests
+ *
+ * IMPORTANT: session_write_close() is called before every redirect.
+ * With a DB session handler, PHP writes session data lazily. If the process
+ * exits via header(Location:) before writing finishes, the flash message
+ * (or login session) is lost — causing the "refresh" symptom.
  */
 if (!defined('BASE_PATH')) {
     require_once dirname(__DIR__) . '/init.php';
 }
 
-// Prevent any output before headers
-ob_start();
+ob_start(); // Buffer output so headers can always be sent
+
+/* ── Redirect helper: flush session then redirect ────── */
+function safeRedirect(string $url, int $code = 303): never {
+    session_write_close();           // Force DB write BEFORE redirect
+    ob_end_clean();
+    header('HTTP/1.1 ' . $code . ' See Other');
+    header('Location: ' . $url);
+    exit();
+}
 
 $action = $_POST['action'] ?? '';
 
-// ── REGISTER ─────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════
+   REGISTER
+   ══════════════════════════════════════════════════ */
 if ($action === 'register') {
     $username = strtolower(trim($_POST['username'] ?? ''));
-    $email    = strtolower(trim($_POST['email'] ?? ''));
-    $klinik   = trim($_POST['klinik'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm  = $_POST['confirm_password'] ?? $password;
+    $email    = strtolower(trim($_POST['email']    ?? ''));
+    $klinik   = trim($_POST['klinik']              ?? '');
+    $password = $_POST['password']                 ?? '';
+    $confirm  = $_POST['confirm_password']         ?? $password;
 
-    // Auto-derive nama from klinik or username
+    // Derive display name from klinik, fallback to username
     $nama = $klinik ?: ucwords(str_replace(['_', '-'], ' ', $username));
 
-    // ── Validate fields ──
+    $errUrl  = BASE_URL . '/?page=login&tab=register';
+
+    // ── Validate ──────────────────────────────────────
     if (!$username || !$email || !$password) {
         $_SESSION['login_error'] = 'Username, email, dan password wajib diisi.';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=register');
-        exit();
+        safeRedirect($errUrl);
     }
 
     if (!$klinik) {
         $_SESSION['login_error'] = 'Nama klinik / apotek wajib diisi.';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=register');
-        exit();
+        safeRedirect($errUrl);
     }
 
     if (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $username)) {
-        $_SESSION['login_error'] = 'Username hanya boleh huruf, angka, underscore (3-30 karakter).';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=register');
-        exit();
+        $_SESSION['login_error'] = 'Username hanya boleh huruf, angka, underscore (3–30 karakter).';
+        safeRedirect($errUrl);
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['login_error'] = 'Format email tidak valid.';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=register');
-        exit();
+        safeRedirect($errUrl);
     }
 
     if (strlen($password) < 8) {
         $_SESSION['login_error'] = 'Password minimal 8 karakter.';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=register');
-        exit();
+        safeRedirect($errUrl);
     }
 
     if ($password !== $confirm) {
         $_SESSION['login_error'] = 'Password dan konfirmasi password tidak cocok.';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=register');
-        exit();
+        safeRedirect($errUrl);
     }
 
+    // ── Database operations ───────────────────────────
     try {
         ensureUsersTable($pdo);
 
-        // Check duplicate username
+        // Duplicate username check
         $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
         $stmt->execute([$username]);
         if ($stmt->fetch()) {
             $_SESSION['login_error'] = 'Username sudah digunakan, pilih yang lain.';
-            ob_end_clean();
-            header('Location: ' . BASE_URL . '/?page=login&tab=register');
-            exit();
+            safeRedirect($errUrl);
         }
 
-        // Check duplicate email
+        // Duplicate email check
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
         $stmt->execute([$email]);
         if ($stmt->fetch()) {
             $_SESSION['login_error'] = 'Email sudah terdaftar. Silakan login.';
-            ob_end_clean();
-            header('Location: ' . BASE_URL . '/?page=login&tab=login');
-            exit();
+            safeRedirect(BASE_URL . '/?page=login&tab=login');
         }
 
-        // Generate next ID safely (TiDB serverless compatibility)
+        // Safe ID generation (TiDB serverless auto_increment compatibility)
         $stmtId = $pdo->query("SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM users");
-        $nextId = (int)$stmtId->fetch()['next_id'];
+        $nextId = (int) $stmtId->fetch(PDO::FETCH_ASSOC)['next_id'];
 
         $hash = password_hash($password, PASSWORD_BCRYPT);
 
-        // Insert with klinik stored in divisi column (reuse existing schema)
+        // klinik is stored in the `divisi` column (existing schema reuse)
         $stmt = $pdo->prepare(
             "INSERT INTO users (id, nama, username, email, password, role, divisi, created_at)
              VALUES (?, ?, ?, ?, ?, 'user', ?, NOW())"
         );
         $stmt->execute([$nextId, $nama, $username, $email, $hash, $klinik]);
 
-        $_SESSION['login_success'] = 'Akun berhasil dibuat! Silakan login.';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=login');
-        exit();
+        // ✅ Success flash — user will see this on the login tab
+        $_SESSION['login_success'] = '🎉 Akun berhasil dibuat! Silakan masuk dengan username dan password Anda.';
+        safeRedirect(BASE_URL . '/?page=login&tab=login');
 
     } catch (Throwable $e) {
         $_SESSION['login_error'] = 'Terjadi kesalahan: ' . $e->getMessage();
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login&tab=register');
-        exit();
+        safeRedirect($errUrl);
     }
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════
+   LOGIN
+   ══════════════════════════════════════════════════ */
 if ($action === 'login') {
     $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $password = $_POST['password']     ?? '';
 
     if (!$username || !$password) {
         $_SESSION['login_error'] = 'Username dan password wajib diisi.';
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login');
-        exit();
+        safeRedirect(BASE_URL . '/?page=login');
     }
 
     try {
         ensureUsersTable($pdo);
 
-        // Support login by username (case-insensitive) or email
-        $usernameLower = strtolower($username);
-        $stmt = $pdo->prepare(
-            "SELECT * FROM users WHERE LOWER(username) = ? OR LOWER(email) = ? LIMIT 1"
+        $lower = strtolower($username);
+        $stmt  = $pdo->prepare(
+            "SELECT * FROM users
+              WHERE LOWER(username) = ? OR LOWER(email) = ?
+              LIMIT 1"
         );
-        $stmt->execute([$usernameLower, $usernameLower]);
-        $user = $stmt->fetch();
+        $stmt->execute([$lower, $lower]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user || !password_verify($password, $user['password'])) {
             $_SESSION['login_error'] = 'Username/email atau password salah.';
-            ob_end_clean();
-            header('Location: ' . BASE_URL . '/?page=login');
-            exit();
+            safeRedirect(BASE_URL . '/?page=login');
         }
 
-        // ── Set session ──
+        // ── Regenerate session ID (security) ──────────
         session_regenerate_id(true);
-        $_SESSION['user_id']         = (int)$user['id'];
-        $_SESSION['username']        = $user['username'] ?? '';
-        $_SESSION['nama']            = $user['nama'] ?? $user['username'];
-        $_SESSION['email']           = $user['email'];
-        $_SESSION['role']            = $user['role'] ?? 'user';
-        $_SESSION['divisi']          = $user['divisi'] ?? '';
-        $_SESSION['klinik']          = $user['divisi'] ?? ''; // klinik stored in divisi
+
+        // ── Store user data in session ─────────────────
+        $_SESSION['user_id']         = (int)  $user['id'];
+        $_SESSION['username']        =        $user['username'] ?? '';
+        $_SESSION['nama']            =        $user['nama']     ?? $user['username'];
+        $_SESSION['email']           =        $user['email'];
+        $_SESSION['role']            =        $user['role']     ?? 'user';
+        $_SESSION['divisi']          =        $user['divisi']   ?? '';
+        $_SESSION['klinik']          =        $user['divisi']   ?? ''; // alias
         $_SESSION['last_regenerate'] = time();
 
-        // ── Redirect to dashboard ──
-        $dashboardUrl = BASE_URL . '/?page=dashboard';
-        ob_end_clean();
-        header('HTTP/1.1 303 See Other');
-        header('Location: ' . $dashboardUrl);
-        exit();
+        // ── Redirect to dashboard (303 forces GET) ─────
+        safeRedirect(BASE_URL . '/?page=dashboard');
 
     } catch (Throwable $e) {
         $_SESSION['login_error'] = 'Terjadi kesalahan saat login: ' . $e->getMessage();
-        ob_end_clean();
-        header('Location: ' . BASE_URL . '/?page=login');
-        exit();
+        safeRedirect(BASE_URL . '/?page=login');
     }
 }
 
-// ── Not a valid POST action ────────────────────────────────────
-ob_end_clean();
-header('Location: ' . BASE_URL . '/?page=login');
-exit();
+/* ── Unknown action ─────────────────────────────────── */
+safeRedirect(BASE_URL . '/?page=login');
 
-// ── Helper: Ensure users table exists ────────────────────────
-function ensureUsersTable(PDO $pdo): void {
+/* ══════════════════════════════════════════════════════
+   HELPER: Ensure users table exists
+   ══════════════════════════════════════════════════ */
+function ensureUsersTable(PDO $pdo): void
+{
     static $checked = false;
     if ($checked) return;
     $checked = true;
@@ -202,11 +196,9 @@ function ensureUsersTable(PDO $pdo): void {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
         }
-    } catch (Throwable $e) {
-        // Table already exists or creation failed gracefully
-    }
+    } catch (Throwable $e) { /* table exists */ }
 
-    // Add username column if missing (older schema migration)
+    // Add username column if older schema lacks it
     try {
         $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'username'");
         if (!$stmt->fetch()) {
