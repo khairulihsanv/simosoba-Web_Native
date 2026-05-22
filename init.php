@@ -3,8 +3,10 @@
  * init.php - Konfigurasi Inti Aplikasi
  * Memuat semua dependency dan konfigurasi dasar.
  */
-error_reporting(0);
-@ini_set('display_errors', '0');
+// Enable errors for debugging (prevents “acak-acak” without knowing the real cause)
+error_reporting(E_ALL);
+@ini_set('display_errors', '1');
+
 
 // 1. Path Standardization
 if (!defined('BASE_PATH')) {
@@ -12,11 +14,14 @@ if (!defined('BASE_PATH')) {
 }
 
 // 1.1 Base URL Detection (Robust Vercel & Localhost)
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'];
+// On Vercel, everything is HTTPS and host is already the correct domain (vercel.app / custom domain).
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
+$protocol = $isHttps ? 'https://' : 'http://';
+
 $base_url = $protocol . $host;
 
-if (strpos($host, 'localhost') !== false) {
+if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
     // Deteksi subfolder secara otomatis di localhost
     $script_dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
     // Jika kita di dalam folder api/ atau actions/, ambil parent-nya
@@ -28,6 +33,17 @@ if (strpos($host, 'localhost') !== false) {
 }
 
 define('BASE_URL', rtrim($base_url, '/'));
+
+// 1.2 Session cookie settings for Vercel/HTTPS
+if (PHP_SAPI !== 'cli') {
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_samesite', 'Lax');
+
+    // Only mark Secure when we are on HTTPS (Vercel)
+    $secure = ($protocol === 'https://') ? '1' : '0';
+    ini_set('session.cookie_secure', (string)$secure);
+}
+
 
 // 2. Session Start & Cache Control (Security)
 if (session_status() === PHP_SESSION_NONE) {

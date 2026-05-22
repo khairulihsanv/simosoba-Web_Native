@@ -1,195 +1,292 @@
 <?php
-// views/mutasi.php
+// views/mutasi.php – Transaction Management
 if (!defined('BASE_PATH')) die('Access Denied');
 
 $pageTitle = 'Transactions';
 
-$msg = '';
-$msg_type = '';
+// Fetch transactions
+$txns = [];
+$total_in = 0; $total_out = 0;
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS transaksi (
+        id INT AUTO_INCREMENT PRIMARY KEY, obat_id INT NOT NULL,
+        tipe ENUM('masuk','keluar','input','output') DEFAULT 'masuk',
+        jumlah INT NOT NULL DEFAULT 0, keterangan TEXT DEFAULT NULL,
+        user_id INT DEFAULT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_obat (obat_id), INDEX idx_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-// Handle Mutasi (Input/Output) Form Submit
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['obat_id'], $_POST['tipe'], $_POST['jumlah'])) {
-    $obat_id = (int)$_POST['obat_id'];
-    $tipe = $_POST['tipe'] === 'masuk' ? 'masuk' : 'keluar';
-    $jumlah = (int)$_POST['jumlah'];
-    $keterangan = $_POST['keterangan'] ?? '';
+    $sql = "SELECT t.*, o.nama AS nama_obat, o.harga AS harga_obat, o.satuan
+            FROM transaksi t LEFT JOIN obat o ON t.obat_id = o.id
+            ORDER BY t.created_at DESC LIMIT 100";
+    $txns = $pdo->query($sql)->fetchAll();
 
-    if ($jumlah > 0) {
-        if ($obatModel->updateStock($obat_id, $jumlah, $tipe, $_SESSION['user_id'], $keterangan)) {
-            $msg = "âœ… Stok berhasil diperbarui!";
-            $msg_type = 'success';
-        } else {
-            $msg = "âŒ Gagal memperbarui stok. Pastikan stok mencukupi jika tipe keluar.";
-            $msg_type = 'error';
-        }
-    } else {
-        $msg = "âŒ Jumlah harus lebih dari 0.";
-        $msg_type = 'error';
-    }
-}
+    $total_in  = (int)$pdo->query("SELECT COALESCE(SUM(jumlah),0) FROM transaksi WHERE tipe IN ('masuk','input')")->fetchColumn();
+    $total_out = (int)$pdo->query("SELECT COALESCE(SUM(jumlah),0) FROM transaksi WHERE tipe IN ('keluar','output')")->fetchColumn();
+} catch (Throwable $e) {}
 
-$all_obat = $obatModel->getAll();
-
-// Hitung low_out count untuk notifikasi badge
-$low_out = 0;
-foreach ($all_obat as $o) {
-    $stok = $o['stok'] ?? 0;
-    $min_stok = $o['stok_min'] ?? ($o['stok_minimum'] ?? 40);
-    if ($stok <= $min_stok) {
-        $low_out++;
-    }
-}
-
-// Fetch Transactions
-$stmt = $pdo->query("SELECT t.*, o.nama as nama_obat, o.harga as harga, u.nama as nama_user
-                     FROM transaksi t
-                     JOIN obat o ON t.obat_id = o.id
-                     JOIN users u ON t.user_id = u.id
-                     ORDER BY t.created_at DESC LIMIT 50");
-$transactions = $stmt->fetchAll();
-$total_trx = count($transactions);
+// Fetch medications for dropdown
+$obatList = [];
+try {
+    $obatList = $pdo->query("SELECT id, nama, stok, satuan, harga FROM obat ORDER BY nama ASC")->fetchAll();
+} catch (Throwable $e) {}
 ?>
-<div class="transaction-body">
+<script>document.getElementById('notification-count').textContent = '0';</script>
 
-    <?php if ($msg): ?>
-        <div class="alert-msg <?= $msg_type === 'success' ? 'success' : 'error' ?>">
-            <?= $msg ?>
+<div class="page-content page-enter">
+
+    <!-- Stats Row -->
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card">
+            <div class="stat-icon-wrap indigo"><i class="bi bi-arrow-left-right"></i></div>
+            <div class="stat-value"><?= number_format(count($txns)) ?></div>
+            <div class="stat-label">Total Transaksi</div>
         </div>
-    <?php endif; ?>
+        <div class="stat-card">
+            <div class="stat-icon-wrap green"><i class="bi bi-arrow-down-left"></i></div>
+            <div class="stat-value"><?= number_format($total_in) ?></div>
+            <div class="stat-label">Total Masuk (unit)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-wrap red"><i class="bi bi-arrow-up-right"></i></div>
+            <div class="stat-value"><?= number_format($total_out) ?></div>
+            <div class="stat-label">Total Keluar (unit)</div>
+        </div>
+    </div>
 
-    <!-- Header Row -->
-    <div class="trx-header">
-        <div class="trx-count"><?= $total_trx ?> transactions</div>
-        <div class="trx-actions">
-            <div class="filter-dropdown">
-                <select class="custom-select">
-                    <option value="All">All</option>
-                    <option value="Stock In">Stock In</option>
-                    <option value="Stock Out">Stock Out</option>
-                </select>
-                <button class="btn-primary" onclick="openTxnModal()">
-                    <i class="bi bi-plus-lg"></i> New Transaction
+    <!-- Table Card -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title"><i class="bi bi-arrow-left-right" style="color:var(--accent)"></i> Riwayat Transaksi</div>
+                <div class="card-sub">Semua mutasi stok masuk dan keluar</div>
+            </div>
+            <div class="flex gap-2">
+                <button class="btn btn-secondary btn-sm" onclick="exportCSV()" aria-label="Export CSV">
+                    <i class="bi bi-download"></i> Export CSV
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="openModal('txn-modal')" id="btn-add-txn" aria-label="Add transaction">
+                    <i class="bi bi-plus-lg"></i> Tambah
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- Transactions List -->
-    <div class="trx-list-container">
-        <?php if (empty($transactions)): ?>
-            <div class="empty-state">
-                <i class="bi bi-inbox"></i>
-                <p>No transactions found.</p>
+        <!-- Filter Bar -->
+        <div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
+            <div class="search-input-wrap" style="min-width:220px;max-width:280px">
+                <i class="bi bi-search"></i>
+                <input type="text" id="txn-search" placeholder="Cari transaksi..." aria-label="Search transactions">
             </div>
-        <?php else: ?>
-            <?php foreach($transactions as $t):
-                $is_in = in_array($t['tipe'] ?? '', ['masuk', 'input']);
-                $date = date('Y-m-d', strtotime($t['created_at'] ?? 'now'));
-                $ref = $is_in ? "PO-" . date('Y', strtotime($t['created_at'])) . "-" . sprintf('%03d', $t['id'])
-                              : "SO-" . date('Y', strtotime($t['created_at'])) . "-" . sprintf('%03d', $t['id']);
-
-                $price = ($t['harga'] ?? 0);
-                $total_price = $price * ($t['jumlah'] ?? 0);
-            ?>
-                <div class="trx-row group">
-                    <div class="trx-left">
-                        <div class="trx-icon-circle <?= $is_in ? 'in' : 'out' ?>">
-                            <i class="bi <?= $is_in ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
-                        </div>
-                        <div class="trx-details">
-                            <div class="trx-name"><?= htmlspecialchars($t['nama_obat'] ?? '') ?></div>
-                            <div class="trx-meta"><?= $date ?> Â· Ref: <?= $ref ?></div>
-                        </div>
-                    </div>
-
-                    <div class="trx-mid">
-                        <div class="trx-badge <?= $is_in ? 'in' : 'out' ?>">
-                            <?= $is_in ? 'Stock In' : 'Stock Out' ?>
-                        </div>
-                    </div>
-
-                    <div class="trx-right">
-                        <div class="trx-qty"><?= $t['jumlah'] ?? 0 ?> units</div>
-                        <?php if ($total_price > 0): ?>
-                        <div class="trx-price">$<?= number_format($total_price, 2, '.', ',') ?></div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-
-</div><!-- /transaction-body -->
-
-<!-- Add Transaction Modal -->
-<div id="txn-modal" class="modal-backdrop hidden" aria-hidden="true">
-    <div class="modal-panel" style="max-width: 500px;">
-        <div class="modal-header">
-            <div class="modal-title-wrap">
-                <div class="modal-icon"><i class="bi bi-arrow-left-right"></i></div>
-                <div>
-                    <h2 class="modal-title">Record Transaction</h2>
-                    <p class="modal-sub">Input stock in or stock out</p>
-                </div>
-            </div>
-            <button class="modal-close" onclick="closeTxnModal()"><i class="bi bi-x-lg"></i></button>
+            <select class="form-ctrl" id="txn-type" style="width:auto" aria-label="Filter type">
+                <option value="">Semua Tipe</option>
+                <option value="masuk">Stok Masuk</option>
+                <option value="keluar">Stok Keluar</option>
+            </select>
+            <input type="date" id="txn-date-from" class="form-ctrl" style="width:auto" aria-label="Date from">
+            <input type="date" id="txn-date-to" class="form-ctrl" style="width:auto" aria-label="Date to">
         </div>
 
-        <form class="modal-body" method="POST">
-            <div class="form-group full-width">
-                <label>Select Medication *</label>
-                <select name="obat_id" id="obat_id" required>
-                    <option value="">-- Search or Select --</option>
-                    <?php foreach($all_obat as $o): ?>
-                        <option value="<?= $o['id'] ?>">
-                            <?= htmlspecialchars($o['nama']) ?> (Sisa: <?= $o['stok'] ?> <?= htmlspecialchars($o['satuan']) ?>)
-                        </option>
+        <div class="table-wrap">
+            <table class="data-table" id="txn-table" aria-label="Transactions table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Obat</th>
+                        <th>Tipe</th>
+                        <th>Jumlah</th>
+                        <th>Nilai</th>
+                        <th>Keterangan</th>
+                        <th>Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody id="txn-body">
+                    <?php if (empty($txns)): ?>
+                    <tr><td colspan="7">
+                        <div class="empty-state"><i class="bi bi-inbox"></i><p>Belum ada transaksi.</p></div>
+                    </td></tr>
+                    <?php else: ?>
+                    <?php foreach ($txns as $i => $t):
+                        $isIn  = in_array($t['tipe'] ?? '', ['masuk','input']);
+                        $nilai = (float)($t['harga_obat'] ?? 0) * (int)($t['jumlah'] ?? 0);
+                    ?>
+                    <tr data-name="<?= strtolower(htmlspecialchars($t['nama_obat'] ?? '')) ?>"
+                        data-type="<?= $isIn ? 'masuk' : 'keluar' ?>"
+                        data-date="<?= substr($t['created_at'] ?? '', 0, 10) ?>">
+                        <td style="color:var(--text-muted);font-size:.78rem"><?= $i+1 ?></td>
+                        <td>
+                            <div style="font-weight:600;font-size:.84rem"><?= htmlspecialchars($t['nama_obat'] ?? 'Unknown') ?></div>
+                            <div style="font-size:.7rem;color:var(--text-muted)"><?= htmlspecialchars($t['satuan'] ?? '') ?></div>
+                        </td>
+                        <td>
+                            <span class="badge <?= $isIn ? 'badge-green' : 'badge-red' ?>">
+                                <i class="bi bi-arrow-<?= $isIn ? 'down-left' : 'up-right' ?>"></i>
+                                <?= $isIn ? 'Masuk' : 'Keluar' ?>
+                            </span>
+                        </td>
+                        <td style="font-weight:700;color:<?= $isIn ? 'var(--green)' : 'var(--red)' ?>">
+                            <?= $isIn ? '+' : '-' ?><?= number_format((int)$t['jumlah']) ?>
+                        </td>
+                        <td style="font-size:.82rem;color:var(--text-secondary)">
+                            <?= $nilai > 0 ? 'Rp '.number_format($nilai,0,',','.') : '-' ?>
+                        </td>
+                        <td style="font-size:.8rem;color:var(--text-muted);max-width:200px">
+                            <?= htmlspecialchars($t['keterangan'] ?? '-') ?>
+                        </td>
+                        <td style="font-size:.78rem;color:var(--text-muted);white-space:nowrap">
+                            <?= $t['created_at'] ? date('d M Y H:i', strtotime($t['created_at'])) : '-' ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ════ ADD TRANSACTION MODAL ═══════════════════════════════ -->
+<div id="txn-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="txn-modal-title">
+    <div class="modal-panel">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="txn-modal-title"><i class="bi bi-arrow-left-right" style="color:var(--accent)"></i> Tambah Transaksi</div>
+                <div class="modal-sub">Catat mutasi stok masuk atau keluar</div>
+            </div>
+            <button class="modal-close" onclick="closeModal('txn-modal')" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form class="modal-body" id="txn-form" onsubmit="saveTxn(event)" novalidate>
+            <div class="form-group">
+                <label class="form-label" for="txn-obat">Pilih Obat <span class="req">*</span></label>
+                <select id="txn-obat" name="obat_id" class="form-ctrl" required onchange="updateStokInfo(this)" aria-required="true">
+                    <option value="">-- Pilih Obat --</option>
+                    <?php foreach ($obatList as $o): ?>
+                    <option value="<?= $o['id'] ?>"
+                            data-stok="<?= $o['stok'] ?>"
+                            data-satuan="<?= htmlspecialchars($o['satuan'] ?? 'unit') ?>"
+                            data-harga="<?= $o['harga'] ?>">
+                        <?= htmlspecialchars($o['nama']) ?> (Stok: <?= $o['stok'] ?>)
+                    </option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
+            <div id="stok-info" class="hidden" style="padding:12px;border-radius:10px;background:var(--accent-light);border:1px solid rgba(99,102,241,.2);font-size:.82rem">
+                <strong>Stok Tersedia:</strong> <span id="stok-val">-</span>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label>Transaction Type *</label>
-                    <select name="tipe" required>
-                        <option value="masuk">ðŸ“¥ Stock In (Add)</option>
-                        <option value="keluar">ðŸ“¤ Stock Out (Deduct)</option>
+                    <label class="form-label" for="txn-tipe">Tipe <span class="req">*</span></label>
+                    <select id="txn-tipe" name="tipe" class="form-ctrl" required aria-required="true">
+                        <option value="masuk">Stok Masuk</option>
+                        <option value="keluar">Stok Keluar</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Quantity *</label>
-                    <input type="number" name="jumlah" min="1" placeholder="e.g. 50" required>
+                    <label class="form-label" for="txn-jumlah">Jumlah <span class="req">*</span></label>
+                    <input type="number" id="txn-jumlah" name="jumlah" class="form-ctrl" min="1" value="1" required aria-required="true">
                 </div>
             </div>
 
-            <div class="form-group full-width">
-                <label>Notes / Ref</label>
-                <input type="text" name="keterangan" placeholder="Optional notes">
-            </div>
-
-            <div style="margin-top: 10px;">
-                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px;">Save Transaction</button>
+            <div class="form-group">
+                <label class="form-label" for="txn-ket">Keterangan</label>
+                <textarea id="txn-ket" name="keterangan" class="form-ctrl" rows="2" placeholder="Tujuan / sumber mutasi..."></textarea>
             </div>
         </form>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('txn-modal')">Batal</button>
+            <button type="submit" form="txn-form" class="btn btn-primary" id="txn-save-btn">
+                <i class="bi bi-check-lg"></i> Simpan Transaksi
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Set the page title
-    document.getElementById('page-title').textContent = 'Transactions';
-    // Set the notification count
-    document.getElementById('notification-count').textContent = <?= $low_out ?>;
-    function openTxnModal() {
-        const modal = document.getElementById('txn-modal');
-        modal.classList.remove('hidden');
-        modal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-    }
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.body.style.overflow=''; }
+document.querySelectorAll('.modal-backdrop').forEach(m => { m.addEventListener('click',e=>{ if(e.target===m)closeModal(m.id); }); });
 
-    function closeTxnModal() {
-        const modal = document.getElementById('txn-modal');
-        modal.classList.add('hidden');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
+/* Stock info */
+function updateStokInfo(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const info = document.getElementById('stok-info');
+    if (sel.value) {
+        document.getElementById('stok-val').textContent = opt.dataset.stok + ' ' + opt.dataset.satuan;
+        info.classList.remove('hidden');
+    } else {
+        info.classList.add('hidden');
     }
+}
+
+/* Save transaction */
+async function saveTxn(e) {
+    e.preventDefault();
+    const btn = document.getElementById('txn-save-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span>';
+
+    const fd = new FormData(document.getElementById('txn-form'));
+    const data = Object.fromEntries(fd.entries());
+
+    try {
+        const res = await fetch('<?= BASE_URL ?>/api/transaksi_api.php', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+            body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (json.success) {
+            showToast(json.message || 'Transaksi disimpan!', 'success');
+            closeModal('txn-modal');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast(json.error || 'Gagal menyimpan.', 'error');
+        }
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Simpan Transaksi';
+}
+
+/* Filter */
+function filterTxn() {
+    const q    = (document.getElementById('txn-search').value || '').toLowerCase();
+    const type = document.getElementById('txn-type').value || '';
+    const from = document.getElementById('txn-date-from').value || '';
+    const to   = document.getElementById('txn-date-to').value || '';
+    document.querySelectorAll('#txn-body tr[data-name]').forEach(r => {
+        const name = r.dataset.name || '';
+        const t    = r.dataset.type || '';
+        const d    = r.dataset.date || '';
+        const show = (!q || name.includes(q)) &&
+                     (!type || t === type) &&
+                     (!from || d >= from) &&
+                     (!to   || d <= to);
+        r.style.display = show ? '' : 'none';
+    });
+}
+['txn-search','txn-type','txn-date-from','txn-date-to'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', filterTxn);
+    document.getElementById(id)?.addEventListener('input', filterTxn);
+});
+
+/* Export CSV */
+function exportCSV() {
+    const rows = [['#','Obat','Tipe','Jumlah','Nilai','Keterangan','Tanggal']];
+    document.querySelectorAll('#txn-body tr[data-name]').forEach((r,i) => {
+        if (r.style.display !== 'none') {
+            const tds = r.querySelectorAll('td');
+            rows.push([i+1, tds[1]?.innerText?.trim(), tds[2]?.innerText?.trim(),
+                       tds[3]?.innerText?.trim(), tds[4]?.innerText?.trim(),
+                       tds[5]?.innerText?.trim(), tds[6]?.innerText?.trim()]);
+        }
+    });
+    const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download = 'transaksi_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+}
 </script>

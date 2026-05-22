@@ -1,365 +1,286 @@
 <?php
-// views/laporan.php
+// views/laporan.php – Monthly Reports with PDF Export
 if (!defined('BASE_PATH')) die('Access Denied');
-
 $pageTitle = 'Reports';
 
-$all_obat = $obatModel->getAll();
-$fDiv = getDivisiFilter();
+$selMonth = $_GET['bulan'] ?? date('m');
+$selYear  = $_GET['tahun'] ?? date('Y');
+$monthStart = "$selYear-$selMonth-01";
+$monthEnd   = date('Y-m-t', strtotime($monthStart));
+$monthLabel = date('F Y', strtotime($monthStart));
 
-// ---- Summary Stats ----
-$total_skus = count($all_obat);
+// ── Fetch Report Data ────────────────────────────────────────
+$all_obat = [];
+try { $all_obat = $pdo->query("SELECT * FROM obat ORDER BY nama ASC")->fetchAll(); } catch(Throwable $e) {}
 
-$stock_value = 0;
-$low_no_stock = 0;
-$expiring_90d = 0;
-$expiring_items = [];
+$total_skus   = count($all_obat);
+$stock_value  = array_sum(array_map(fn($o) => ($o['stok']??0)*($o['harga']??0), $all_obat));
+$low_stock    = count(array_filter($all_obat, fn($o) => ($o['stok']??0) <= ($o['stok_min']??40)));
+$expiring_90d = count(array_filter($all_obat, fn($o) => !empty($o['exp_date']) && strtotime($o['exp_date']) <= strtotime('+90 days') && strtotime($o['exp_date']) >= time()));
+
+// Monthly transactions
+$monthTxn = []; $monthIn = 0; $monthOut = 0;
+try {
+    $stmt = $pdo->prepare("SELECT t.*, o.nama AS nama_obat, o.harga FROM transaksi t LEFT JOIN obat o ON t.obat_id=o.id WHERE t.created_at BETWEEN ? AND ? ORDER BY t.created_at DESC");
+    $stmt->execute([$monthStart.' 00:00:00', $monthEnd.' 23:59:59']);
+    $monthTxn = $stmt->fetchAll();
+    foreach ($monthTxn as $t) {
+        if (in_array($t['tipe'], ['masuk','input'])) $monthIn += (int)$t['jumlah'];
+        else $monthOut += (int)$t['jumlah'];
+    }
+} catch(Throwable $e) {}
 
 // Category distribution
 $categories = [];
-
 foreach ($all_obat as $o) {
-    $stok = $o['stok'] ?? 0;
-    $harga = $o['harga'] ?? 0;
-    $min_stok = $o['stok_min'] ?? ($o['stok_minimum'] ?? 40);
-    $stock_value += $stok * $harga;
-
-    if ($stok <= $min_stok) {
-        $low_no_stock++;
-    }
-
-    // Category counting
-    $cat = $o['kategori'] ?? 'Other';
-    if (empty($cat)) $cat = 'Other';
-    if (!isset($categories[$cat])) $categories[$cat] = 0;
-    $categories[$cat]++;
-
-    $expiryValue = $o['exp_date'] ?? ($o['kadaluarsa'] ?? null);
-    if (!empty($expiryValue)) {
-        $exp_date = strtotime($expiryValue);
-        $now = time();
-        $days_left = (int)(($exp_date - $now) / 86400);
-        if ($days_left <= 90 && $days_left >= 0) {
-            $expiring_90d++;
-            $expiring_items[] = [
-                'name' => $o['nama'] ?? 'Unknown',
-                'lot' => 'LOT-' . date('Y', $exp_date) . '-' . strtoupper(substr($o['nama'] ?? 'XX', 0, 2))
-) . sprintf('%03d', $o['id']),
-                'date' => date('d/m/Y', $exp_date),
-                'days' => $days_left,
-            ];
-        }
-    }
+    $c = $o['kategori'] ?: 'Other';
+    $categories[$c] = ($categories[$c] ?? 0) + 1;
 }
+if (empty($categories)) $categories = ['Antibiotics'=>4,'Analgesics'=>4,'Vitamins'=>3,'Other'=>2];
 
-// If no real expiring data, add demo items
-if (empty($expiring_items)) {
-    $expiring_items = [
-        ['name' => 'Metformin 500mg', 'lot' => 'LOT-2024-MF005', 'date' => '25/05/2026', 'days' => 4],
-        ['name' => 'Amoxicillin 500mg', 'lot' => 'LOT-2024-AM001', 'date' => '15/08/2026', 'days' => 86],
-    ];
-    $expiring_90d = 2;
+// Top 8 products by value
+$topProducts = array_filter($all_obat, fn($o) => ($o['stok']??0)*($o['harga']??0) > 0);
+usort($topProducts, fn($a,$b) => $b['stok']*$b['harga'] - $a['stok']*$a['harga']);
+$topProducts = array_slice($topProducts, 0, 8);
+
+// Format
+function fmtRp(float $v): string {
+    if ($v >= 1000000000) return 'Rp ' . number_format($v/1000000000,1) . 'B';
+    if ($v >= 1000000)    return 'Rp ' . number_format($v/1000000,1) . 'M';
+    if ($v >= 1000)       return 'Rp ' . number_format($v/1000,1) . 'K';
+    return 'Rp ' . number_format($v, 0);
 }
-
-// If no categories, add demo
-if (empty($categories)) {
-    $categories = ['Analgesics' => 2, 'Antibiotics' => 2, 'Vaccines' => 1, 'Dermatology' => 1, 'Antihypert
-tensives' => 1, 'Vitamins' => 1, 'Respiratory' => 1, 'Cardiovascular' => 1, 'Other' => 2];
-}
-
-// ---- Top Products by Value (stock * price) ----
-$product_values = [];
-foreach ($all_obat as $o) {
-    $val = ($o['stok'] ?? 0) * ($o['harga'] ?? 0);
-    if ($val > 0) {
-        $product_values[] = ['name' => $o['nama'] ?? 'Unknown', 'value' => $val];
-    }
-}
-usort($product_values, function($a, $b) { return $b['value'] - $a['value']; });
-$product_values = array_slice($product_values, 0, 8);
-
-// Format stock value
-if ($stock_value >= 1000000) {
-    $stock_display = '$' . number_format($stock_value / 1000000, 1) . 'M';
-} elseif ($stock_value >= 1000) {
-    $stock_display = '$' . number_format($stock_value / 1000, 1) . 'k';
-} else {
-    $stock_display = '$' . number_format($stock_value, 0);
-}
-
-if (empty($product_values)) {
-    $product_values = [
-        ['name' => 'Salbutamol Inhaler', 'value' => 455],
-        ['name' => 'Influenza Vaccine', 'value' => 445],
-        ['name' => 'Amoxicillin 500mg', 'value' => 298],
-        ['name' => 'Vitamin C 1000mg', 'value' => 152],
-        ['name' => 'Metformin 500mg', 'value' => 130],
-        ['name' => 'Hydrocortisone Cream', 'value' => 125],
-        ['name' => 'Omeprazole 20mg', 'value' => 115],
-        ['name' => 'Ibuprofen 400mg', 'value' => 100],
-    ];
-}
-
-// Pie chart colors aligned to the reference view.
-$pie_colors = ['#3b82f6','#3b82f6','#84cc16','#f97316','#06b6d4','#8b5cf6','#ef4444','#f59e0b','#10b981','
-'#64748b'];
-
-// For the notification badge, we'll use the low_no_stock (same as low_out)
-$notification_count = $low_no_stock;
 ?>
-<div class="reports-body">
+<script>document.getElementById('notification-count').textContent = '<?= $low_stock ?>';</script>
+
+<div class="page-content page-enter">
+
     <!-- Header -->
-    <div class="rpt-header">
-        <div class="rpt-count"><?= $total_skus ?> medications analyzed</div>
-        <button class="btn-outline" id="export-pdf-btn" onclick="exportPDF()">
-            <i class="bi bi-file-earmark-pdf"></i> Export PDF
-        </button>
+    <div class="card" style="padding:16px 20px">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800">Laporan Inventori Farmasi</div>
+                <div style="font-size:.82rem;color:var(--text-muted)">Generated: <?= date('d M Y H:i') ?></div>
+            </div>
+            <div class="flex gap-2 items-center flex-wrap">
+                <!-- Month/Year Selector -->
+                <form method="GET" class="flex gap-2" style="align-items:center">
+                    <input type="hidden" name="page" value="laporan">
+                    <select name="bulan" class="form-ctrl" style="width:auto" aria-label="Select month">
+                        <?php for ($m=1; $m<=12; $m++): ?>
+                        <option value="<?= str_pad($m,2,'0',STR_PAD_LEFT) ?>" <?= $selMonth == $m ? 'selected' : '' ?>>
+                            <?= date('F', mktime(0,0,0,$m,1,2024)) ?>
+                        </option>
+                        <?php endfor; ?>
+                    </select>
+                    <select name="tahun" class="form-ctrl" style="width:auto" aria-label="Select year">
+                        <?php for ($y=date('Y'); $y>=(date('Y')-3); $y--): ?>
+                        <option value="<?= $y ?>" <?= $selYear == $y ? 'selected' : '' ?>><?= $y ?></option>
+                        <?php endfor; ?>
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-calendar3"></i> Tampilkan
+                    </button>
+                </form>
+
+                <button class="btn btn-primary btn-sm" onclick="exportPDF()" id="pdf-btn" aria-label="Export PDF">
+                    <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="window.print()" aria-label="Print report">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- PDF wrapper starts here -->
+    <!-- PDF area starts -->
     <div id="pdf-area">
 
-    <!-- Summary Cards -->
+    <!-- Summary Stats -->
     <div class="rpt-stats-row">
         <div class="rpt-stat-card">
-            <div class="rpt-stat-label">Stock Value</div>
-            <div class="rpt-stat-value"><?= $stock_display ?></div>
+            <div class="rpt-stat-label">Nilai Stok</div>
+            <div class="rpt-stat-value" style="font-size:1.4rem"><?= fmtRp($stock_value) ?></div>
         </div>
         <div class="rpt-stat-card">
-            <div class="rpt-stat-label">Total SKUs</div>
+            <div class="rpt-stat-label">Total SKU</div>
             <div class="rpt-stat-value"><?= $total_skus ?></div>
         </div>
         <div class="rpt-stat-card">
-            <div class="rpt-stat-label">Low / No Stock</div>
-            <div class="rpt-stat-value"><?= $low_no_stock ?></div>
+            <div class="rpt-stat-label">Stok Masuk (<?= $monthLabel ?>)</div>
+            <div class="rpt-stat-value" style="color:var(--green)"><?= number_format($monthIn) ?></div>
         </div>
         <div class="rpt-stat-card">
-            <div class="rpt-stat-label">Expiring â‰¤90d</div>
-            <div class="rpt-stat-value"><?= $expiring_90d ?></div>
+            <div class="rpt-stat-label">Stok Keluar (<?= $monthLabel ?>)</div>
+            <div class="rpt-stat-value" style="color:var(--red)"><?= number_format($monthOut) ?></div>
+        </div>
+        <div class="rpt-stat-card">
+            <div class="rpt-stat-label">Stok Rendah</div>
+            <div class="rpt-stat-value" style="color:var(--amber)"><?= $low_stock ?></div>
+        </div>
+        <div class="rpt-stat-card">
+            <div class="rpt-stat-label">Kadaluarsa ≤90 Hari</div>
+            <div class="rpt-stat-value" style="color:var(--purple)"><?= $expiring_90d ?></div>
         </div>
     </div>
 
     <!-- Charts Row -->
-    <div class="rpt-charts-row">
-        <!-- Top Products by Value -->
-        <div class="rpt-chart-card">
-            <h3 class="rpt-chart-title">Top Products by Value</h3>
-            <p class="rpt-chart-sub">Stock value = qty Ã— price</p>
-            <div class="chart-container bar-chart-box">
-                <canvas id="topValueChart"></canvas>
+    <div class="charts-row">
+        <!-- Top Products Bar Chart -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="bi bi-bar-chart" style="color:var(--accent)"></i> Top Produk by Nilai</div>
+                <div class="card-sub">Stok × Harga</div>
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap" style="height:240px">
+                    <canvas id="topChart" role="img" aria-label="Top products chart"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- Category Distribution -->
-        <div class="rpt-chart-card">
-            <h3 class="rpt-chart-title">Category Distribution</h3>
-            <p class="rpt-chart-sub">By number of SKUs</p>
-            <div class="chart-container pie-chart-box">
-                <canvas id="categoryChart"></canvas>
+        <!-- Category Pie Chart -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><i class="bi bi-pie-chart" style="color:var(--accent)"></i> Distribusi Kategori</div>
+                <div class="card-sub">Jumlah SKU per kategori</div>
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap" style="height:240px">
+                    <canvas id="catChart" role="img" aria-label="Category distribution chart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Expiring Within 90 Days -->
-    <div class="rpt-expiring-card">
-        <h3 class="rpt-chart-title" style="margin-bottom: 20px;">Expiring Within 90 Days</h3>
-        <?php if (empty($expiring_items)): ?>
-            <div class="empty-state-sm">
-                <i class="bi bi-check-circle"></i> No medications expiring within 90 days.
-            </div>
-        <?php else: ?>
-            <?php foreach($expiring_items as $e):
-                $urgency = $e['days'] <= 7 ? 'critical' : ($e['days'] <= 30 ? 'warning' : 'normal');
-            ?>
-            <div class="exp-row">
-                <div class="exp-left">
-                    <span class="exp-dot <?= $urgency ?>"></span>
-                    <div>
-                        <div class="exp-name"><?= htmlspecialchars($e['name']) ?></div>
-                        <div class="exp-lot"><?= $e['lot'] ?></div>
-                    </div>
-                </div>
-                <div class="exp-right">
-                    <span class="exp-days <?= $urgency ?>"><?= $e['days'] ?>d</span>
-                    <span class="exp-date"><?= $e['date'] ?></span>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+    <!-- Monthly Transactions Table -->
+    <?php if (!empty($monthTxn)): ?>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="bi bi-table" style="color:var(--accent)"></i> Transaksi <?= $monthLabel ?></div>
+            <span class="badge badge-indigo"><?= count($monthTxn) ?> transaksi</span>
+        </div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Obat</th><th>Tipe</th><th>Jumlah</th><th>Nilai</th><th>Keterangan</th><th>Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($monthTxn as $t):
+                        $isIn = in_array($t['tipe']??'', ['masuk','input']);
+                        $nilai = (float)($t['harga']??0) * (int)($t['jumlah']??0);
+                    ?>
+                    <tr>
+                        <td style="font-weight:600"><?= htmlspecialchars($t['nama_obat']??'') ?></td>
+                        <td><span class="badge <?= $isIn ? 'badge-green' : 'badge-red' ?>"><?= $isIn ? 'Masuk' : 'Keluar' ?></span></td>
+                        <td style="font-weight:700;color:<?= $isIn?'var(--green)':'var(--red)' ?>"><?= $isIn?'+':'-' ?><?= (int)$t['jumlah'] ?></td>
+                        <td style="font-size:.8rem"><?= $nilai>0 ? 'Rp '.number_format($nilai,0,',','.') : '-' ?></td>
+                        <td style="font-size:.78rem;color:var(--text-muted)"><?= htmlspecialchars($t['keterangan']??'-') ?></td>
+                        <td style="font-size:.78rem;color:var(--text-muted)"><?= date('d M Y', strtotime($t['created_at'])) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
+    <?php endif; ?>
+
+    <!-- Expiring Items Table -->
+    <?php
+    $expItems = array_filter($all_obat, fn($o) => !empty($o['exp_date']) && strtotime($o['exp_date']) <= strtotime('+90 days') && strtotime($o['exp_date']) >= time());
+    if (!empty($expItems)): ?>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="bi bi-clock-history" style="color:var(--purple)"></i> Obat Kadaluarsa ≤90 Hari</div>
+        </div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Nama Obat</th><th>Kategori</th><th>Stok</th><th>Kadaluarsa</th><th>Sisa Hari</th></tr></thead>
+                <tbody>
+                    <?php foreach ($expItems as $o):
+                        $days = max(0, (int)floor((strtotime($o['exp_date']) - time()) / 86400));
+                        $urgency = $days <= 7 ? 'badge-red' : ($days <= 30 ? 'badge-amber' : 'badge-purple');
+                    ?>
+                    <tr>
+                        <td style="font-weight:600"><?= htmlspecialchars($o['nama']) ?></td>
+                        <td><?= htmlspecialchars($o['kategori']??'') ?></td>
+                        <td><?= (int)$o['stok'] ?></td>
+                        <td><?= date('d M Y', strtotime($o['exp_date'])) ?></td>
+                        <td><span class="badge <?= $urgency ?>"><?= $days ?> hari</span></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
 
     </div><!-- /pdf-area -->
-</div><!-- /reports-body -->
+
+</div>
 
 <script>
-    // Set the page title
-    document.getElementById('page-title').textContent = 'Reports';
-    // Set the notification count
-    document.getElementById('notification-count').textContent = <?= $notification_count ?>;
-    document.querySelectorAll('.rpt-chart-sub').forEach((node) => {
-        if (node.textContent.includes('Stock value')) node.textContent = 'Stock value = qty x price';
-    });
-    document.querySelectorAll('.rpt-stat-label').forEach((node) => {
-        if (node.textContent.includes('Expiring')) node.innerHTML = 'Expiring &le;90d';
-    });
+const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+const textColor = isDark ? '#64748b' : '#94a3b8';
+const gridColor = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.04)';
+const tooltipCfg = {
+    backgroundColor: isDark ? '#1a1f2e' : '#fff',
+    titleColor: isDark ? '#f1f5f9' : '#0f172a',
+    bodyColor: isDark ? '#94a3b8' : '#475569',
+    borderColor: isDark ? '#1e2a3a' : '#e2e8f0',
+    borderWidth: 1, cornerRadius: 10, padding: 10
+};
 
-    // ---- Top Products Bar Chart ----
-    const topLabels = <?= json_encode(array_column($product_values, 'name')) ?>;
-    const topValues = <?= json_encode(array_column($product_values, 'value')) ?>;
+/* Top Products */
+const topLabels = <?= json_encode(array_column($topProducts, 'nama')) ?>;
+const topVals   = <?= json_encode(array_map(fn($o) => round($o['stok']*$o['harga']), $topProducts)) ?>;
+new Chart(document.getElementById('topChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels: topLabels, datasets: [{ label: 'Nilai (Rp)', data: topVals, backgroundColor: '#6366f1', borderRadius: 6, barThickness: 20 }] },
+    options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { ...tooltipCfg, callbacks: { label: c => 'Rp ' + c.raw.toLocaleString('id-ID') } } },
+        scales: { x: { grid: { color: gridColor }, border: { display: false }, ticks: { color: textColor, font:{size:10}, callback: v => 'Rp' + (v/1000).toFixed(0)+'K' } }, y: { grid: { display: false }, border: { display: false }, ticks: { color: textColor, font:{size:10} } } }
+    }
+});
 
-    const barCtx = document.getElementById('topValueChart').getContext('2d');
-    new Chart(barCtx, {
-        type: 'bar',
-        data: {
-            labels: topLabels,
-            datasets: [{
-                label: 'Value ($)',
-                data: topValues,
-                backgroundColor: '#3b82f6',
-                borderRadius: 8,
-                barThickness: 26,
-                maxBarThickness: 26
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: { padding: { right: 14 } },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            return '$' + ctx.raw.toLocaleString();
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    suggestedMax: Math.max(...topValues, 1) < 600 ? 600 : undefined,
-                    grid: { display: false },
-                    border: { display: false },
-                    ticks: {
-                        callback: function(v) { return '$' + v; },
-                        color: '#94a3b8',
-                        font: { family: 'Inter', size: 16 },
-                        maxTicksLimit: 5
-                    }
-                },
-                y: {
-                    grid: { display: false },
-                    border: { display: false },
-                    ticks: {
-                        color: '#94a3b8',
-                        font: { family: 'Inter', size: 14 }
-                    }
-                }
-            }
+/* Category Pie */
+const catLabels = <?= json_encode(array_keys($categories)) ?>;
+const catVals   = <?= json_encode(array_values($categories)) ?>;
+const catColors = ['#6366f1','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
+new Chart(document.getElementById('catChart').getContext('2d'), {
+    type: 'doughnut',
+    data: { labels: catLabels, datasets: [{ data: catVals, backgroundColor: catColors.slice(0,catLabels.length), borderWidth: 2, borderColor: isDark ? '#141826' : '#fff' }] },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'right', labels: { color: textColor, font: { size: 11 }, padding: 12 } },
+            tooltip: { ...tooltipCfg }
         }
-    });
+    }
+});
 
-    // ---- Category Pie Chart ----
-    const catLabels = <?= json_encode(array_keys($categories)) ?>;
-    const catValues = <?= json_encode(array_values($categories)) ?>;
-    const catColors = <?= json_encode(array_slice($pie_colors, 0, count($categories))) ?>;
-    const catTotal = catValues.reduce((a, b) => a + b, 0);
+/* PDF Export */
+function exportPDF() {
+    const btn = document.getElementById('pdf-btn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+    btn.disabled = true;
 
-    const outsidePieLabels = {
-        id: 'outsidePieLabels',
-        afterDatasetsDraw(chart) {
-            const { ctx } = chart;
-            const meta = chart.getDatasetMeta(0);
-            if (!meta || !meta.data.length) return;
-
-            ctx.save();
-            ctx.font = '15px Inter, sans-serif';
-            ctx.textBaseline = 'middle';
-
-            meta.data.forEach((arc, index) => {
-                const value = chart.data.datasets[0].data[index];
-                if (!value) return;
-
-                const angle = (arc.startAngle + arc.endAngle) / 2;
-                const radius = arc.outerRadius + 34;
-                const x = arc.x + Math.cos(angle) * radius;
-                const y = arc.y + Math.sin(angle) * radius;
-                const pct = Math.round((value / catTotal) * 100);
-
-                ctx.fillStyle = chart.data.datasets[0].backgroundColor[index];
-                ctx.textAlign = Math.cos(angle) >= 0 ? 'left' : 'right';
-                ctx.fillText(`${chart.data.labels[index]} ${pct}%`, x, y);
-            });
-
-            ctx.restore();
-        }
+    const opt = {
+        margin: [8, 6, 8, 6],
+        filename: 'SiMoSoBa_Laporan_<?= $monthLabel ?>.pdf',
+        image: { type: 'jpeg', quality: 0.97 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css'] }
     };
 
-    const pieCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(pieCtx, {
-        type: 'pie',
-        data: {
-            labels: catLabels,
-            datasets: [{
-                data: catValues,
-                backgroundColor: catColors,
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: { padding: { top: 36, right: 96, bottom: 36, left: 96 } },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            const pct = Math.round((ctx.raw / catTotal) * 100);
-                            return ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
-                        }
-                    }
-                }
-            }
-        },
-        plugins: [outsidePieLabels]
-    });
-
-    // ---- PDF Export ----
-    function exportPDF() {
-        const btn = document.getElementById('export-pdf-btn');
-        const original = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
-        btn.disabled = true;
-
-        const element = document.getElementById('pdf-area');
-
-        const opt = {
-            margin:       [8, 8, 8, 8],
-            filename:     'Simosoba_Report_' + new Date().toISOString().slice(0,10) + '.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        if (typeof html2pdf === 'undefined') {
-            btn.innerHTML = original;
-            btn.disabled = false;
-            window.print();
-            return;
-        }
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            btn.innerHTML = original;
-            btn.disabled = false;
-        }).catch(() => {
-            btn.innerHTML = original;
-            btn.disabled = false;
-            alert('Failed to export PDF. Please try again.');
-        });
-    }
+    if (typeof html2pdf === 'undefined') { window.print(); btn.innerHTML = orig; btn.disabled = false; return; }
+    html2pdf().set(opt).from(document.getElementById('pdf-area')).save()
+        .then(() => { btn.innerHTML = orig; btn.disabled = false; })
+        .catch(() => { window.print(); btn.innerHTML = orig; btn.disabled = false; });
+}
 </script>

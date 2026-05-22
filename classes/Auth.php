@@ -28,11 +28,13 @@ class Auth {
         // }
         
         // Check user agent consistency
-        if (isset($_SESSION['user_agent']) && $_SESSION['user_agent'] !== $_SERVER['HTTP_USER_AGENT']) {
-            $this->destroySession();
-            header("Location: index.php?page=login");
-            exit();
-        }
+        // NOTE: Disable for stability. In real networks/proxies/browser updates, user agent can change and cause random logout.
+        // if (isset($_SESSION['user_agent']) && $_SESSION['user_agent'] !== $_SERVER['HTTP_USER_AGENT']) {
+        //     $this->destroySession();
+        //     header("Location: index.php?page=login");
+        //     exit();
+        // }
+
         
         // Regenerate session ID periodically to prevent session fixation
         if (!isset($_SESSION['last_regenerate']) || (time() - $_SESSION['last_regenerate']) > 300) {

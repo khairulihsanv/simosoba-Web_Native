@@ -1,82 +1,149 @@
 <?php
 /**
- * api/login.php - Login Fragment
+ * api/login.php – Login & Register Handler
+ * Handles both login and register POST requests
  */
 if (!defined('BASE_PATH')) {
     require_once dirname(__DIR__) . '/init.php';
 }
 
-if (!empty($_SESSION['user_id'])) {
-    echo "<script>window.location.href='index.php?page=dashboard';</script>";
-    exit();
+header('Content-Type: text/html; charset=utf-8');
+
+$action = $_POST['action'] ?? '';
+
+// ── REGISTER ─────────────────────────────────────────────────
+if ($action === 'register') {
+    $nama     = trim($_POST['nama'] ?? '');
+    $email    = strtolower(trim($_POST['email'] ?? ''));
+    $password = $_POST['password'] ?? '';
+    $confirm  = $_POST['confirm_password'] ?? '';
+    $role     = $_POST['role'] ?? 'user';
+
+    // Validate
+    if (!$nama || !$email || !$password || !$confirm) {
+        $_SESSION['login_error'] = 'Semua field wajib diisi.';
+        header('Location: ' . BASE_URL . '/?page=login&tab=register');
+        exit();
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['login_error'] = 'Format email tidak valid.';
+        header('Location: ' . BASE_URL . '/?page=login&tab=register');
+        exit();
+    }
+
+    if (strlen($password) < 8) {
+        $_SESSION['login_error'] = 'Password minimal 8 karakter.';
+        header('Location: ' . BASE_URL . '/?page=login&tab=register');
+        exit();
+    }
+
+    if ($password !== $confirm) {
+        $_SESSION['login_error'] = 'Password dan konfirmasi password tidak cocok.';
+        header('Location: ' . BASE_URL . '/?page=login&tab=register');
+        exit();
+    }
+
+    // Sanitize role
+    $allowedRoles = ['user', 'admin_staff', 'super_admin'];
+    if (!in_array($role, $allowedRoles)) {
+        $role = 'user';
+    }
+
+    try {
+        // Check if table exists, create if not
+        ensureUsersTable($pdo);
+
+        // Check duplicate email
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            $_SESSION['login_error'] = 'Email sudah terdaftar. Silakan login.';
+            header('Location: ' . BASE_URL . '/?page=login&tab=login');
+            exit();
+        }
+
+        // Insert user
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $stmt = $pdo->prepare("INSERT INTO users (nama, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())");
+        $stmt->execute([$nama, $email, $hash, $role]);
+
+        $_SESSION['login_success'] = 'Akun berhasil dibuat! Silakan login.';
+        header('Location: ' . BASE_URL . '/?page=login&tab=login');
+        exit();
+
+    } catch (Throwable $e) {
+        $_SESSION['login_error'] = 'Terjadi kesalahan: ' . $e->getMessage();
+        header('Location: ' . BASE_URL . '/?page=login&tab=register');
+        exit();
+    }
 }
 
-$errLogin = ['invalid' => 'Username atau password salah.', 'empty' => 'Semua field wajib diisi.'];
-$errKey = $_GET['error'] ?? '';
+// ── LOGIN ─────────────────────────────────────────────────────
+if ($action === 'login') {
+    $email    = strtolower(trim($_POST['email'] ?? ''));
+    $password = $_POST['password'] ?? '';
 
-include BASE_PATH . '/includes/header.php';
-?>
+    if (!$email || !$password) {
+        $_SESSION['login_error'] = 'Email dan password wajib diisi.';
+        header('Location: ' . BASE_URL . '/?page=login');
+        exit();
+    }
 
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-md">
-        <div class="overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/95 shadow-2xl shadow-slate-500/10 backdrop-blur-xl">
-            <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200"></div>
-            <div class="p-8 sm:p-10">
-                <div class="flex flex-col items-center text-center gap-4 mb-8">
-                    <div class="relative group">
-                        <div class="absolute inset-0 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 blur-2xl opacity-30 group-hover:opacity-40 transition-all"></div>
-                        <span class="relative inline-flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-4 ring-white/70">
-                            <i class="bi bi-capsule-pill text-3xl text-emerald"></i>
-                        </span>
-                    </div>
-                    <div class="space-y-2">
-                        <h1 class="text-3xl font-display font-bold text-slate-900">Welcome to SiMoSoBa</h1>
-                        <p class="text-sm sm:text-base text-slate-500 font-medium">Sign in to continue</p>
-                    </div>
-                </div>
+    try {
+        ensureUsersTable($pdo);
 
-                <button type="button" class="w-full inline-flex items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
-                    <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google icon" class="h-5 w-5">
-                    Continue with Google
-                </button>
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-                <div class="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.35em] text-slate-400">
-                    <span class="h-px flex-1 bg-slate-200"></span>
-                    <span>or</span>
-                    <span class="h-px flex-1 bg-slate-200"></span>
-                </div>
+        if (!$user || !password_verify($password, $user['password'])) {
+            $_SESSION['login_error'] = 'Email atau password salah.';
+            header('Location: ' . BASE_URL . '/?page=login');
+            exit();
+        }
 
-                <?php if ($errKey && isset($errLogin[$errKey])): ?>
-                    <div class="mb-6 rounded-3xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                        <i class="bi bi-exclamation-triangle-fill mr-2"></i> <?= $errLogin[$errKey] ?>
-                    </div>
-                <?php endif; ?>
+        // Set session
+        session_regenerate_id(true);
+        $_SESSION['user_id']         = (int)$user['id'];
+        $_SESSION['nama']            = $user['nama'];
+        $_SESSION['email']           = $user['email'];
+        $_SESSION['role']            = $user['role'];
+        $_SESSION['divisi']          = $user['divisi'] ?? '';
+        $_SESSION['last_regenerate'] = time();
 
-                <form action="index.php?page=login_process" method="POST" class="space-y-5">
-                    <div>
-                        <label for="username" class="mb-2 block text-sm font-semibold text-slate-700">Username</label>
-                        <div class="relative rounded-3xl border border-slate-200 bg-slate-50 focus-within:border-emerald focus-within:ring-2 focus-within:ring-emerald/10">
-                            <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400"><i class="bi bi-person"></i></span>
-                            <input id="username" name="username" type="text" placeholder="username" class="w-full rounded-3xl bg-transparent py-3.5 pl-12 pr-4 text-sm text-slate-700 outline-none" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="password" class="mb-2 block text-sm font-semibold text-slate-700">Password</label>
-                        <div class="relative rounded-3xl border border-slate-200 bg-slate-50 focus-within:border-emerald focus-within:ring-2 focus-within:ring-emerald/10">
-                            <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400"><i class="bi bi-lock"></i></span>
-                            <input id="password" name="password" type="password" placeholder="••••••••" class="w-full rounded-3xl bg-transparent py-3.5 pl-12 pr-4 text-sm text-slate-700 outline-none" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full rounded-3xl bg-navy px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-navy/10 transition hover:bg-slate-900">Sign in</button>
-                </form>
+        header('Location: ' . BASE_URL . '/?page=dashboard');
+        exit();
 
-                <div class="mt-6 flex flex-col gap-3 text-center text-sm text-slate-500 sm:flex-row sm:justify-between sm:text-left">
-                    <a href="#" class="hover:text-slate-900 transition">Forgot password?</a>
-                    <span>Need account? <a href="#" class="font-semibold text-navy hover:text-emerald">Contact admin</a></span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    } catch (Throwable $e) {
+        $_SESSION['login_error'] = 'Terjadi kesalahan saat login: ' . $e->getMessage();
+        header('Location: ' . BASE_URL . '/?page=login');
+        exit();
+    }
+}
 
-<?php include BASE_PATH . '/includes/footer.php'; ?>
+// Not a valid POST action
+header('Location: ' . BASE_URL . '/?page=login');
+exit();
+
+// ── Helper: Ensure users table exists ────────────────────────
+function ensureUsersTable(PDO $pdo): void {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS users (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            nama        VARCHAR(100) NOT NULL,
+            email       VARCHAR(120) NOT NULL UNIQUE,
+            password    VARCHAR(255) NOT NULL,
+            role        ENUM('user','admin_staff','super_admin') DEFAULT 'user',
+            divisi      VARCHAR(80)  DEFAULT '',
+            remember_token VARCHAR(128) DEFAULT NULL,
+            created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+            updated_at  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_email (email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+}

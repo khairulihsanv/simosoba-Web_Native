@@ -1,123 +1,91 @@
 <!DOCTYPE html>
-<html lang="id" x-data="themeSwitcher()" x-bind:class="{ 'dark': isDark }">
+<html lang="id" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="SiMoSoBa - Sistem Monitoring Stok Obat Cerdas untuk Manajemen Farmasi yang Akurat dan Efisien.">
-    <title>Dashboard SiMoSoBa â€” Monitoring Stok Cerdas</title>
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/main.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/css/base44-polish.css">
+    <meta name="description" content="SiMoSoBa – Sistem Monitoring Stok Obat Cerdas untuk Manajemen Farmasi yang Akurat dan Efisien.">
+    <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' – SiMoSoBa' : 'SiMoSoBa Dashboard' ?></title>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CDN Frameworks -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/css/main.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+    <!-- html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- html5-qrcode for barcode scanning -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Theme init (inline, before render to avoid flash) -->
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        navy: '#1e293b',
-                        emerald: '#10b981',
-                        softgrey: '#f8fafc',
-                        amber: '#f59e0b',
-                        rose: '#e11d48',
-                        // Dark Mode Colors
-                        dark: {
-                            900: '#0f172a', // Background utama
-                            800: '#1e293b', // Sidebar / Cards
-                            700: '#334155', // Borders
-                            text: '#f8fafc' // Teks putih
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Poppins', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .font-display { font-family: 'Poppins', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-
-        /* Responsive Table fix */
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-        /* Glassmorphism utility */
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .dark .glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.05); }
-
-        /* Page transition */
-        .page-enter { opacity: 0; transform: translateY(10px); }
-        .page-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.4s ease-out, transform 0.4s ease-out; }
-    </style>
-    
-    <script>
-        // Alpine Logic for Theme Switcher
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('themeSwitcher', () => ({
-                isDark: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
-                toggleTheme() {
-                    this.isDark = !this.isDark;
-                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
-                }
-            }))
-        });
-
-        // Simple script to add page-enter-active class on load for SPA feel
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.classList.add('page-enter');
-            setTimeout(() => {
-                document.body.classList.add('page-enter-active');
-                document.body.classList.remove('page-enter');
-            }, 10);
-        });
-    </script>
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.nextTick(() => {
-                lucide.createIcons();
-            });
-        });
-        // Also run on load
-        lucide.createIcons();
+        (function() {
+            const saved = localStorage.getItem('simo-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = saved || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
     </script>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-dark-900 dark:via-dark-900 dark:to-slate-900 text-navy dark:text-dark-text antialiased transition-colors duration-300">
-    <!-- Topbar -->
-    <header class="topbar">
-        <h1 class="topbar-title" id="page-title"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Dashboard' ?></h1>
-        <div class="topbar-actions">
-            <div class="search-box">
-                <i data-lucide="search"></i>
-                <input type="text" placeholder="Search medications..." id="global-search">
-            </div>
-            <button class="icon-btn" @click="toggleTheme()" title="Toggle Dark Mode">
-                <i data-lucide="moon"></i>
-            </button>
-            <div class="notif-btn relative">
-                <i data-lucide="bell"></i>
-                <span class="notif-badge absolute -top-1 -right-1" id="notification-count">0</span>
-            </div>
-        </div>
-    </header>
+<body class="page-enter">
 
-    <!-- Sidebar and Main Content -->
-    <div class="flex h-screen">
-        <?php include BASE_PATH . '/includes/sidebar.php'; ?>
-        <main class="main-content flex-1 overflow-y-auto">
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Mobile Overlay -->
+<div id="sidebar-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49;backdrop-filter:blur(2px);" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+
+    <!-- ═══ SIDEBAR ═══════════════════════════════════════════ -->
+    <?php include BASE_PATH . '/includes/sidebar.php'; ?>
+
+    <!-- ═══ MAIN AREA ════════════════════════════════════════ -->
+    <div class="main-area">
+
+        <!-- Topbar -->
+        <header class="topbar" role="banner">
+            <div class="flex items-center gap-3">
+                <!-- Mobile menu button -->
+                <button class="icon-btn" id="menu-toggle" onclick="toggleSidebar()" title="Toggle Menu" style="display:none" aria-label="Toggle navigation menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="topbar-title" id="page-title"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Dashboard' ?></h1>
+            </div>
+
+            <div class="topbar-actions">
+                <!-- Search -->
+                <div class="topbar-search" role="search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search medications..." id="global-search" aria-label="Search medications">
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode" aria-label="Toggle dark mode">
+                    <i class="bi bi-moon-stars" id="theme-icon"></i>
+                </button>
+
+                <!-- Notification Bell -->
+                <button class="icon-btn" onclick="window.location='<?= BASE_URL ?>/?page=alerts'" title="Alerts" aria-label="View alerts" style="position:relative">
+                    <i class="bi bi-bell"></i>
+                    <span class="notif-badge" id="notification-count" aria-label="Alert count">0</span>
+                </button>
+
+                <!-- User avatar -->
+                <div class="user-avatar" title="<?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?>" aria-label="User menu" style="cursor:pointer" onclick="window.location='<?= BASE_URL ?>/?page=logout'">
+                    <?= strtoupper(substr($_SESSION['nama'] ?? 'U', 0, 1)) ?>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Main Content -->
+        <main class="main-content" role="main">
