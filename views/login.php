@@ -39,6 +39,7 @@ unset($_SESSION['login_error'], $_SESSION['login_success']);
 
     <style>
         body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
             background: var(--bg-page);
             display: flex;
@@ -408,15 +409,6 @@ unset($_SESSION['login_error'], $_SESSION['login_success']);
                         <input type="hidden" name="action" value="register">
 
                         <div class="form-group">
-                            <label class="form-label" for="reg-name">Nama Lengkap <span class="req">*</span></label>
-                            <div class="auth-input-wrap">
-                                <i class="bi bi-person auth-input-icon" aria-hidden="true"></i>
-                                <input type="text" id="reg-name" name="nama"
-                                       class="auth-input" placeholder="Nama Lengkap Anda"
-                                       required autocomplete="name" aria-required="true">
-                            </div>
-                        </div>
-                        <div class="form-group">
                             <label class="form-label" for="reg-username">Username <span class="req">*</span></label>
                             <div class="auth-input-wrap">
                                 <i class="bi bi-person-badge auth-input-icon" aria-hidden="true"></i>
@@ -450,18 +442,6 @@ unset($_SESSION['login_error'], $_SESSION['login_success']);
                                 </button>
                             </div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="reg-confirm">Konfirmasi Password <span class="req">*</span></label>
-                            <div class="auth-input-wrap">
-                                <i class="bi bi-lock-fill auth-input-icon" aria-hidden="true"></i>
-                                <input type="password" id="reg-confirm" name="confirm_password"
-                                       class="auth-input" placeholder="Ulangi password"
-                                       required autocomplete="new-password" aria-required="true">
-                            </div>
-                        </div>
-
-
 
                         <button type="submit" class="auth-btn" id="register-btn">
                             <i class="bi bi-person-check"></i>
@@ -535,13 +515,7 @@ document.getElementById('login-form')?.addEventListener('submit', function(e) {
 
 document.getElementById('register-form')?.addEventListener('submit', function(e) {
     const pass = document.getElementById('reg-password').value;
-    const confirm = document.getElementById('reg-confirm').value;
 
-    if (pass !== confirm) {
-        e.preventDefault();
-        alert('Password dan konfirmasi password tidak sama!');
-        return;
-    }
     if (pass.length < 8) {
         e.preventDefault();
         alert('Password minimal 8 karakter!');

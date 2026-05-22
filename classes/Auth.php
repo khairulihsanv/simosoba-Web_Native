@@ -140,7 +140,7 @@ class Auth {
             return "1=1";
         }
 
-        return "{$prefix}divisi = '" . $this->escapeSql($divisi) . "'";
+        return "{$prefix}divisi = " . $this->escapeSql($divisi);
     }
 
     /**

@@ -13,11 +13,17 @@ $action = $_POST['action'] ?? '';
 
 // ── REGISTER ─────────────────────────────────────────────────
 if ($action === 'register') {
-    $nama     = trim($_POST['nama'] ?? '');
     $username = strtolower(trim($_POST['username'] ?? ''));
+    $nama     = trim($_POST['nama'] ?? '');
+    if (!$nama && $username) {
+        $nama = ucwords(str_replace(['_', '-'], ' ', $username));
+    }
     $email    = strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
     $confirm  = $_POST['confirm_password'] ?? '';
+    if (!$confirm) {
+        $confirm = $password;
+    }
     $role     = 'user'; // default role, managed by super_admin later
 
     // Validate

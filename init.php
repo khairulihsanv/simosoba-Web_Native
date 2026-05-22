@@ -16,7 +16,9 @@ if (!defined('BASE_PATH')) {
 // 1.1 Base URL Detection (Robust Vercel & Localhost)
 // On Vercel, everything is HTTPS and host is already the correct domain (vercel.app / custom domain).
 $host = $_SERVER['HTTP_HOST'] ?? '';
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+    || ($_SERVER['SERVER_PORT'] ?? 80) == 443
+    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
 $protocol = $isHttps ? 'https://' : 'http://';
 
 $base_url = $protocol . $host;
@@ -76,9 +78,6 @@ require_once BASE_PATH . '/config/database.php';
  * Objek ini akan digunakan di seluruh aplikasi untuk mengurangi redundansi.
  */
 $auth = new Auth();
-$currentUser = new User($auth->me()); // Inisialisasi User Object
-$obatModel = new ObatGenerik($pdo);
-$prediksiModel = new Prediksi($pdo);
 
 /**
  * Helper Global (Opsional: Jika user masih ingin menggunakan fungsi standalone)
