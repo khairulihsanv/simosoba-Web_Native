@@ -139,6 +139,25 @@ for ($i = 0; $i < count($predData); $i++) {
 
 <div class="page-content page-enter">
 
+    <!-- ── WELCOME BANNER ───────────────────────────────────── -->
+    <div class="welcome-banner">
+        <div class="welcome-banner-text">
+            <h2>Selamat Datang, <?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?>! 👋</h2>
+            <p>
+                <?php
+                $hour = (int)date('H');
+                if ($hour < 11)      echo 'Mulai pagi yang produktif — pantau stok obat klinik Anda.';
+                elseif ($hour < 15)  echo 'Siang ini, semua stok terpantau. Tetap waspada terhadap alert.';
+                elseif ($hour < 19)  echo 'Sore yang baik untuk cek laporan stok harian Anda.';
+                else                 echo 'Malam ini, pastikan inventori sudah diperbarui.';
+                ?>
+            </p>
+        </div>
+        <div class="welcome-banner-icon" aria-hidden="true">
+            <i class="bi bi-shield-check"></i>
+        </div>
+    </div>
+
     <!-- ── ALERTS STRIP ─────────────────────────────────────── -->
     <?php if (!empty($alerts)): ?>
     <div style="display:flex;flex-direction:column;gap:8px;" id="alert-strip" aria-label="Active alerts">

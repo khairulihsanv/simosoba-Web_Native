@@ -1708,3 +1708,79 @@ img { max-width: 100%; display: block; }
   .med-grid { grid-template-columns: 1fr; }
 }
 
+/* ─── 39. Page Entrance Animation ───────────────────────────── */
+/* Body starts with this class (header.php). It creates a smooth
+   fade-in on every page load. After animation, the class is kept
+   but does not interfere with any other styles. */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+body.page-enter {
+  animation: pageEnter .35s var(--ease) forwards;
+}
+
+/* Ensure overlay is invisible when .hidden — covers cases where
+   inline style might not fully hide it */
+#sidebar-overlay.hidden {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Dark-mode body background ensure */
+[data-theme="dark"] body {
+  background: var(--bg-page);
+}
+
+/* ─── 40. Dashboard welcome banner ──────────────────────────── */
+.welcome-banner {
+  background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+  border-radius: 20px;
+  padding: 24px 28px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: rgba(255,255,255,.08);
+  border-radius: 50%;
+}
+
+.welcome-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: 60px;
+  width: 130px; height: 130px;
+  background: rgba(255,255,255,.05);
+  border-radius: 50%;
+}
+
+.welcome-banner-text h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.welcome-banner-text p {
+  font-size: .84rem;
+  opacity: .85;
+}
+
+.welcome-banner-icon {
+  font-size: 3rem;
+  opacity: .9;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}

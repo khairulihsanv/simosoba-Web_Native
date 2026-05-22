@@ -104,10 +104,9 @@ async function apiRequest(url, method = 'GET', data = null) {
     return await res.json();
 }
 
-/* ── Page entrance animation ─────────────────────────── */
-document.addEventListener('DOMContentLoaded', function() {
-    document.body.classList.add('page-enter');
-});
+/* ── Page entrance animation ─────────────────────────────── */
+/* body.page-enter is already set in header.php — nothing to do here */
+
 </script>
 </body>
 </html>
