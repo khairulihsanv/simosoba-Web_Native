@@ -3,27 +3,24 @@
 
 require_once dirname(__DIR__) . '/init.php';
 
-// 1. Clear Remember Me cookie & DB token
+// 1. Clear signed auth cookie (serverless auth)
+_smsb_clearAuthCookie();
+
+// 2. Clear Remember Me token from DB + cookie
 $auth->clearRememberMe();
 
-// 2. Unset all session variables
+// 3. Wipe session data
 $_SESSION = [];
 
-// 3. Delete session cookie
+// 4. Delete session cookie
 if (ini_get('session.use_cookies')) {
-    $params = session_get_cookie_params();
-    setcookie(
-        session_name(), '',
-        time() - 42000,
-        $params['path'],
-        $params['domain'],
-        $params['secure'],
-        $params['httponly']
-    );
+    $p = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000,
+        $p['path'], $p['domain'], $p['secure'], $p['httponly']);
 }
 
-// 4. Destroy session data (removes row from php_sessions table)
-session_destroy();
+// 5. Destroy session
+@session_destroy();
 
 header('Location: ' . BASE_URL . '/?page=login');
 exit();

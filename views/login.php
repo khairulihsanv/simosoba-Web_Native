@@ -10,10 +10,31 @@ if (isset($_SESSION['user_id'])) {
     exit();
 }
 
-$error   = $_SESSION['login_error'] ?? '';
-$success = $_SESSION['login_success'] ?? '';
-$tab     = $_GET['tab'] ?? 'login'; // 'login' or 'register'
+// ── Flash messages via URL params (session-independent, works on Vercel) ──
+$errorMap = [
+    'invalid_creds'  => 'Username/email atau password salah.',
+    'field_required' => 'Semua field wajib diisi.',
+    'klinik_req'     => 'Nama klinik / apotek wajib diisi.',
+    'user_format'    => 'Username hanya boleh huruf, angka, underscore (3–30 karakter).',
+    'email_bad'      => 'Format email tidak valid.',
+    'pass_short'     => 'Password minimal 8 karakter.',
+    'pass_mismatch'  => 'Password dan konfirmasi password tidak cocok.',
+    'user_taken'     => 'Username sudah digunakan, pilih yang lain.',
+    'email_taken'    => 'Email sudah terdaftar. Silakan login.',
+    'db_err'         => 'Terjadi kesalahan database. Coba lagi.',
+    'login_err'      => 'Terjadi kesalahan saat login. Coba lagi.',
+];
+$okMap = [
+    'registered' => '🎉 Akun berhasil dibuat! Silakan masuk dengan username dan password Anda.',
+];
+
+$errCode = $_GET['err'] ?? '';
+$okCode  = $_GET['ok']  ?? '';
+$error   = $errorMap[$errCode] ?? ($_SESSION['login_error']   ?? '');
+$success = $okMap[$okCode]     ?? ($_SESSION['login_success'] ?? '');
 unset($_SESSION['login_error'], $_SESSION['login_success']);
+
+$tab = $_GET['tab'] ?? ($okCode ? 'login' : 'login');
 ?>
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
@@ -182,7 +203,7 @@ unset($_SESSION['login_error'], $_SESSION['login_success']);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            max-height: 700px;
+            max-height: min(700px, 90vh);
         }
 
         /* Tabs */
